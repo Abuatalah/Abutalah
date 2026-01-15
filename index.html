@@ -1,0 +1,3771 @@
+<!DOCTYPE html>
+<html>
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging-compat.js"></script>
+    <title>Masjid Abutalah - Prayer Times</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a5e3f 0%, #2d8c5a 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        /* Login First Screen - IMPROVED UI */
+        .login-first-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a5e3f 0%, #2d8c5a 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .login-first-screen.hidden {
+            display: none;
+        }
+        
+        .welcome-message {
+            max-width: 600px;
+            margin-bottom: 40px;
+            animation: fadeIn 1s ease-out;
+        }
+        
+        .welcome-message h1 {
+            font-size: 42px;
+            margin-bottom: 20px;
+            font-family: 'Georgia', serif;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(to right, #f1c40f, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .welcome-message p {
+            font-size: 18px;
+            line-height: 1.6;
+            opacity: 0.9;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .login-options {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 900px;
+            animation: slideUp 1s ease-out 0.3s both;
+        }
+        
+        .login-option-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px 30px;
+            width: 380px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-option-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, #f1c40f, #ffd700);
+        }
+        
+        .login-option-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .login-option-card h3 {
+            margin-bottom: 25px;
+            font-size: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            color: #f1c40f;
+        }
+        
+        .login-option-card p {
+            margin-bottom: 30px;
+            opacity: 0.9;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        /* Container */
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: none;
+            min-height: 100vh;
+        }
+        
+        .container.active {
+            display: block;
+        }
+        
+        /* Top Navigation Bar - UPDATED */
+        .top-nav {
+            background: linear-gradient(135deg, #1a5e3f 0%, #2d8c5a 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .menu-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .menu-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-display {
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        /* Menu Dropdown - NEW */
+        .menu-dropdown {
+            position: absolute;
+            top: 70px;
+            left: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 280px;
+            z-index: 1000;
+            display: none;
+            overflow: hidden;
+        }
+        
+        .menu-dropdown.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .menu-header {
+            background: linear-gradient(135deg, #1a5e3f 0%, #2d8c5a 100%);
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .menu-items {
+            padding: 10px 0;
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            color: #333;
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .menu-item:hover {
+            background-color: #f0f7f3;
+            color: #1a5e3f;
+        }
+        
+        .menu-item i {
+            width: 20px;
+            text-align: center;
+            color: #2d8c5a;
+        }
+        
+        .menu-divider {
+            height: 1px;
+            background-color: #eee;
+            margin: 10px 0;
+        }
+        
+        /* Header */
+        header {
+            background-color: #2d8c5a;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 4px solid #f1c40f;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo i {
+            font-size: 36px;
+            color: #f1c40f;
+        }
+        
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+            font-family: 'Georgia', serif;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .masjid-name {
+            font-size: 16px;
+            margin-top: 5px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .current-time {
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 25px;
+            margin-top: 15px;
+            display: inline-block;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Main Navigation Menu */
+        .main-nav {
+            background-color: #1a5e3f;
+            display: flex;
+            justify-content: center;
+            padding: 0;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            justify-content: space-around;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border-bottom: 4px solid transparent;
+            font-size: 14px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            background-color: #2d8c5a;
+            border-bottom: 4px solid #f1c40f;
+        }
+        
+        .nav-link i {
+            font-size: 18px;
+        }
+        
+        /* Main Content Area */
+        .main-content {
+            display: none;
+            padding: 20px;
+            min-height: 500px;
+        }
+        
+        .main-content.active {
+            display: block;
+        }
+        
+        /* Notice banner - larger image */
+        .notice-banner {
+            background: linear-gradient(to right, #fff9e6, #fff3cd);
+            border-left: 5px solid #f1c40f;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            font-size: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        .notice-content {
+            flex-grow: 1;
+        }
+        
+        .notice-image {
+            width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid #eee;
+            aspect-ratio: 16/9;
+        }
+        
+        /* Prayer times table - mobile friendly */
+        .prayer-times-container {
+            padding: 0 0 20px;
+            overflow-x: auto;
+        }
+        
+        .prayer-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-radius: 10px;
+            overflow: hidden;
+            min-width: 600px;
+        }
+        
+        .prayer-table th {
+            background: linear-gradient(135deg, #2d8c5a 0%, #1a5e3f 100%);
+            color: white;
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .prayer-table td {
+            padding: 14px 10px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+        
+        .prayer-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .prayer-table tr:hover {
+            background-color: #f0f7f3;
+        }
+        
+        .prayer-name {
+            font-weight: 600;
+            color: #1a5e3f;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+        }
+        
+        .prayer-icon {
+            color: #2d8c5a;
+            font-size: 16px;
+        }
+        
+        .current-prayer {
+            background-color: #e8f5e9 !important;
+            border-left: 4px solid #2d8c5a;
+            position: relative;
+        }
+        
+        .prayer-status {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-weight: 600;
+        }
+        
+        .status-current {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status-upcoming {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-passed {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* Authentication Modal - IMPROVED UI */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .auth-modal.active {
+            display: flex;
+        }
+        
+        .auth-form {
+            background: linear-gradient(135deg, #1a5e3f 0%, #2d8c5a 100%);
+            padding: 40px 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.5s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .auth-form::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, #f1c40f, #ffd700);
+        }
+        
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .auth-tab {
+            padding: 15px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .auth-tab.active {
+            color: #f1c40f;
+            border-bottom: 3px solid #f1c40f;
+        }
+        
+        .auth-content {
+            display: none;
+        }
+        
+        .auth-content.active {
+            display: block;
+        }
+        
+        .auth-content h3 {
+            margin-bottom: 25px;
+            color: #f1c40f;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 22px;
+            text-align: center;
+            justify-content: center;
+        }
+        
+        /* Admin panel */
+        .admin-panel {
+            background-color: #f8f9fa;
+            border-top: 3px solid #ddd;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 10px;
+            display: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .admin-panel.active {
+            display: block;
+        }
+        
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .admin-title {
+            color: #2d8c5a;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .admin-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #2d8c5a 0%, #1a5e3f 100%);
+            color: white;
+            border: 1px solid #1a5e3f;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(45, 140, 90, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+            color: white;
+            border: 1px solid #545b62;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: 1px solid #c0392b;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            color: white;
+            border: 1px solid #1e7e34;
+        }
+        
+        /* Admin form */
+        .admin-form {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: #2d8c5a;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(45, 140, 90, 0.1);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        /* Extra prayers section */
+        .extra-prayers {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid #eee;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .section-title {
+            color: #2d8c5a;
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Dashboard Content */
+        .dashboard-content {
+            padding: 20px;
+        }
+        
+        .ticket-section {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #eee;
+        }
+        
+        .ticket-form {
+            display: grid;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .ticket-list {
+            margin-top: 20px;
+        }
+        
+        .ticket-item {
+            background-color: #f9f9f9;
+            border-left: 5px solid #2d8c5a;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+        
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .ticket-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* Products Section */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+        
+        .product-card {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            border: 1px solid #eee;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .product-image {
+            height: 160px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        
+        .product-card:hover .product-image img {
+            transform: scale(1.05);
+        }
+        
+        .product-info {
+            padding: 15px;
+        }
+        
+        .product-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .product-card:hover .product-actions {
+            opacity: 1;
+        }
+        
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            background-color: #2d8c5a;
+            transform: scale(1.1);
+        }
+        
+        /* Product Management Section */
+        .product-management {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #eee;
+            display: none;
+        }
+        
+        .product-management.active {
+            display: block;
+        }
+        
+        /* Profile Section */
+        .profile-section {
+            padding: 20px;
+        }
+        
+        .profile-card {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid #eee;
+        }
+        
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f7f3;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2d8c5a 0%, #1a5e3f 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            border: 4px solid #f1c40f;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+            border-top: 2px solid #eee;
+            background-color: #f8f9fa;
+        }
+        
+        /* Extra Prayers Management */
+        .extra-prayers-list {
+            margin-top: 15px;
+        }
+        
+        .extra-prayer-item {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .extra-prayer-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .extra-prayer-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        /* Hide some elements when in admin mode */
+        .hidden {
+            display: none;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2d8c5a;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Quick Stats */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d8c5a;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        /* Page Title */
+        .page-title {
+            color: #2d8c5a;
+            font-size: 22px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #f0f7f3;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Back to Top Button */
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #2d8c5a 0%, #1a5e3f 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+            border: none;
+        }
+        
+        .back-to-top:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Currency display */
+        .currency {
+            color: #d35400;
+            font-weight: bold;
+        }
+        
+        /* Notification permission banner */
+        .notification-permission-banner {
+            background: linear-gradient(135deg, #1a5e3f 0%, #2d8c5a 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            flex-wrap: wrap;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .notification-content {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .notification-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .notification-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .notification-btn.accept {
+            background-color: #f1c40f;
+            color: #333;
+        }
+        
+        .notification-btn.accept:hover {
+            background-color: #ffd700;
+            transform: translateY(-2px);
+        }
+        
+        .notification-btn.deny {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .notification-btn.deny:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Input styles for auth modal */
+        .auth-input-group {
+            margin-bottom: 20px;
+        }
+        
+        .auth-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .auth-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .auth-input:focus {
+            outline: none;
+            border-color: #f1c40f;
+            box-shadow: 0 0 0 3px rgba(241, 196, 15, 0.2);
+        }
+        
+        .auth-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .auth-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .auth-btn-primary {
+            background: linear-gradient(135deg, #f1c40f 0%, #ffd700 100%);
+            color: #333;
+        }
+        
+        .auth-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(241, 196, 15, 0.4);
+        }
+        
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .auth-switch a {
+            color: #f1c40f;
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 5px;
+            transition: color 0.3s;
+        }
+        
+        .auth-switch a:hover {
+            color: #ffd700;
+            text-decoration: underline;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .welcome-message h1 {
+                font-size: 32px;
+            }
+            
+            .login-option-card {
+                width: 100%;
+                max-width: 400px;
+                padding: 30px 20px;
+            }
+            
+            .auth-form {
+                padding: 30px 20px;
+            }
+            
+            .auth-tab {
+                padding: 12px 15px;
+                font-size: 14px;
+            }
+            
+            .btn {
+                padding: 10px 15px;
+                min-width: 100px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .welcome-message h1 {
+                font-size: 28px;
+            }
+            
+            .welcome-message p {
+                font-size: 16px;
+                padding: 15px;
+            }
+            
+            .login-option-card h3 {
+                font-size: 22px;
+            }
+            
+            .notification-permission-banner {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .notification-actions {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head> 
+<body> 
+    <!-- Login First Screen -->
+    <div class="login-first-screen" id="login-first-screen">
+        <div class="welcome-message">
+            <h1>Welcome to Masjid Abutalah</h1>
+            <p>Experience the complete Islamic prayer times application with ticket support system, Ramadan store, and community features. Please login or sign up to continue.</p>
+        </div>
+        
+        <div class="login-options">
+            <div class="login-option-card">
+                <h3><i class="fas fa-user-plus"></i> New User</h3>
+                <p>Create an account to access prayer times, create support tickets, and browse Ramadan store.</p>
+                <button class="btn btn-primary" id="show-signup-first" style="width: 100%;">
+                    <i class="fas fa-user-plus"></i> Sign Up Now
+                </button>
+            </div>
+            
+            <div class="login-option-card">
+                <h3><i class="fas fa-sign-in-alt"></i> Returning User</h3>
+                <p>Already have an account? Login to access your dashboard and all features.</p>
+                <button class="btn btn-secondary" id="show-login-first" style="width: 100%;">
+                    <i class="fas fa-sign-in-alt"></i> Login Now
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Authentication Modal -->
+    <div class="auth-modal" id="auth-modal">
+        <div class="auth-form">
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="login-tab">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </div>
+                <div class="auth-tab" id="signup-tab">
+                    <i class="fas fa-user-plus"></i> Sign Up
+                </div>
+            </div>
+            
+            <div class="auth-content active" id="login-content">
+                <h3>
+                    <i class="fas fa-sign-in-alt"></i> Login to Your Account
+                </h3>
+                <div class="auth-input-group">
+                    <label for="login-email">
+                        <i class="fas fa-envelope"></i> Email Address
+                    </label>
+                    <input type="email" id="login-email" class="auth-input" placeholder="Enter your email">
+                </div>
+                <div class="auth-input-group">
+                    <label for="login-password">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" id="login-password" class="auth-input" placeholder="Enter your password">
+                </div>
+                <div id="login-error" class="alert alert-error hidden">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span></span>
+                </div>
+                <button class="auth-btn auth-btn-primary" id="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                <p class="auth-switch">
+                    Don't have an account? <a href="#" id="show-signup">Sign up here</a>
+                </p>
+            </div>
+            
+            <div class="auth-content" id="signup-content">
+                <h3>
+                    <i class="fas fa-user-plus"></i> Create New Account
+                </h3>
+                <div class="auth-input-group">
+                    <label for="signup-name">
+                        <i class="fas fa-user"></i> Full Name
+                    </label>
+                    <input type="text" id="signup-name" class="auth-input" placeholder="Enter your full name">
+                </div>
+                <div class="auth-input-group">
+                    <label for="signup-email">
+                        <i class="fas fa-envelope"></i> Email Address
+                    </label>
+                    <input type="email" id="signup-email" class="auth-input" placeholder="Enter your email">
+                </div>
+                <div class="auth-input-group">
+                    <label for="signup-password">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" id="signup-password" class="auth-input" placeholder="Create a password (min. 6 characters)">
+                </div>
+                <div id="signup-error" class="alert alert-error hidden">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span></span>
+                </div>
+                <button class="auth-btn auth-btn-primary" id="signup-btn">
+                    <i class="fas fa-user-plus"></i> Sign Up
+                </button>
+                <p class="auth-switch">
+                    Already have an account? <a href="#" id="show-login">Login here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Menu Dropdown - NEW -->
+    <div class="menu-dropdown" id="menu-dropdown">
+        <div class="menu-header">
+            <i class="fas fa-bars"></i>
+            <span>Menu</span>
+        </div>
+        <div class="menu-items">
+            <a href="#" class="menu-item" onclick="navigateToDashboard()">
+                <i class="fas fa-ticket-alt"></i>
+                <span>Tickets</span>
+            </a>
+            <a href="#" class="menu-item" onclick="requestNewFeature()">
+                <i class="fas fa-lightbulb"></i>
+                <span>Request New Feature</span>
+            </a>
+            <a href="#" class="menu-item" onclick="openSupportWhatsApp()">
+                <i class="fab fa-whatsapp"></i>
+                <span>Support (WhatsApp)</span>
+            </a>
+            <div class="menu-divider"></div>
+            <a href="#" class="menu-item" onclick="navigateToProfile()">
+                <i class="fas fa-user"></i>
+                <span>My Profile</span>
+            </a>
+            <a href="#" class="menu-item" onclick="logoutUser()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Back to Top Button -->
+    <button class="back-to-top hidden" id="back-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+    
+    <!-- Notification Permission Banner -->
+    <div class="notification-permission-banner hidden" id="notification-permission-banner">
+        <div class="notification-content">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                <i class="fas fa-bell" style="font-size: 20px;"></i>
+                <strong>Enable Notifications</strong>
+            </div>
+            <div style="font-size: 14px; opacity: 0.9;">
+                Get important announcements and prayer time updates directly on your phone.
+            </div>
+        </div>
+        <div class="notification-actions">
+            <button class="notification-btn accept" id="enable-notifications">
+                <i class="fas fa-check"></i> Enable
+            </button>
+            <button class="notification-btn deny" id="deny-notifications">
+                <i class="fas fa-times"></i> Later
+            </button>
+        </div>
+    </div>
+    
+    <div class="container" id="main-container">
+        <!-- Top Navigation Bar - UPDATED -->
+        <div class="top-nav">
+            <div class="nav-left">
+                <button class="menu-button" id="menu-button">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="user-info">
+                    <span id="user-display" class="user-display">
+                        <i class="fas fa-user"></i> Guest User
+                    </span>
+                </div>
+            </div>
+            <div class="auth-buttons">
+                <button class="btn btn-primary" id="login-button">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                <!-- Logout button removed, now available in menu -->
+            </div>
+        </div>
+        
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <i class="fas fa-mosque"></i>
+                <div>
+                    <h1>Masjid Abutalah</h1>
+                    <div class="masjid-name">Islamic Center & Prayer Times</div>
+                </div>
+            </div>
+            <div class="current-time" id="current-time">
+                <i class="fas fa-clock"></i> Loading...
+            </div>
+        </header>
+        
+        <!-- Main Navigation Menu - UPDATED -->
+        <nav class="main-nav">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active" data-page="home">
+                        <i class="fas fa-home"></i> Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-page="store">
+                        <i class="fas fa-store"></i> Ramadan Store
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-page="dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-page="profile">
+                        <i class="fas fa-user"></i> Profile
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <!-- Home Page Content -->
+        <div class="main-content active" id="home-content">
+            <div class="notice-banner" id="notice-banner">
+                <div class="notice-content">
+                    <strong id="notice-title">Important Notice</strong>: 
+                    <span id="notice-text">Welcome to Masjid Abutalah prayer times application. All times are in local timezone.</span>
+                </div>
+                <img id="notice-image" class="notice-image" src="" alt="" style="display: none;">
+            </div>
+            
+            <div class="prayer-times-container">
+                <table class="prayer-table">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-pray"></i> Prayer</th>
+                            <th><i class="fas fa-play"></i> Start</th>
+                            <th><i class="fas fa-volume-up"></i> Azan</th>
+                            <th><i class="fas fa-users"></i> Zamaat</th>
+                            <th><i class="fas fa-stop"></i> End</th>
+                            <th><i class="fas fa-info-circle"></i> Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="prayer-times-table">
+                        <!-- Prayer times will be inserted here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="admin-panel" id="admin-panel">
+                <div class="admin-header">
+                    <div class="admin-title">
+                        <i class="fas fa-user-cog"></i>
+                        Admin Control Panel
+                    </div>
+                    <div class="admin-controls">
+                        <button class="btn btn-secondary" id="toggle-admin">
+                            <i class="fas fa-compress"></i> Minimize
+                        </button>
+                        <button class="btn btn-danger" id="clear-data">
+                            <i class="fas fa-redo"></i> Reset All
+                        </button>
+                        <!-- Admin Tools Buttons -->
+                        <button class="btn btn-success" id="view-fcm-tokens" style="display: none;">
+                            <i class="fas fa-key"></i> View FCM Tokens
+                        </button>
+                        <button class="btn btn-info" id="send-test-notification" style="display: none;">
+                            <i class="fas fa-bell"></i> Test Notification
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="admin-forms">
+                    <!-- Notice Management -->
+                    <div class="admin-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-bullhorn"></i> Update Announcement
+                        </h3>
+                        <div class="admin-form">
+                            <div class="form-group">
+                                <label for="notice-title-input">
+                                    <i class="fas fa-heading"></i> Notice Title
+                                </label>
+                                <input type="text" id="notice-title-input" class="form-control" value="Important Notice">
+                            </div>
+                            <div class="form-group">
+                                <label for="notice-text-input">
+                                    <i class="fas fa-text-width"></i> Notice Text
+                                </label>
+                                <input type="text" id="notice-text-input" class="form-control" value="Welcome to Masjid Abutalah prayer times application. All times are in local timezone.">
+                            </div>
+                            <div class="form-group">
+                                <label for="notice-image-input">
+                                    <i class="fas fa-image"></i> Image URL (Optional)
+                                </label>
+                                <input type="text" id="notice-image-input" class="form-control" placeholder="https://example.com/image.jpg (16:9 ratio)">
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="update-notice-btn">
+                            <i class="fas fa-save"></i> Update Notice
+                        </button>
+                    </div>
+                    
+                    <!-- Prayer Times Management -->
+                    <div class="admin-section" style="margin-top: 20px;">
+                        <h3 class="section-title">
+                            <i class="fas fa-clock"></i> Update Prayer Times
+                        </h3>
+                        <div id="prayer-times-form">
+                            <!-- Prayer time inputs will be inserted here -->
+                        </div>
+                        <button class="btn btn-primary" id="save-prayer-times-btn" style="margin-top: 15px;">
+                            <i class="fas fa-save"></i> Save All Prayer Times
+                        </button>
+                    </div>
+                    
+                    <!-- Add Extra Prayer -->
+                    <div class="extra-prayers">
+                        <h3 class="section-title">
+                            <i class="fas fa-plus-circle"></i> Add Extra Prayer Time
+                        </h3>
+                        <div class="admin-form">
+                            <div class="form-group">
+                                <label for="extra-prayer-name">
+                                    <i class="fas fa-pray"></i> Prayer Name
+                                </label>
+                                <input type="text" id="extra-prayer-name" class="form-control" placeholder="e.g., Jumu'ah, Eid">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="extra-prayer-start">
+                                        <i class="fas fa-play"></i> Start
+                                    </label>
+                                    <input type="time" id="extra-prayer-start" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="extra-prayer-azan">
+                                        <i class="fas fa-volume-up"></i> Azan
+                                    </label>
+                                    <input type="time" id="extra-prayer-azan" class="form-control">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="extra-prayer-zamaat">
+                                        <i class="fas fa-users"></i> Zamaat
+                                    </label>
+                                    <input type="time" id="extra-prayer-zamaat" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="extra-prayer-end">
+                                        <i class="fas fa-stop"></i> End
+                                    </label>
+                                    <input type="time" id="extra-prayer-end" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="add-extra-prayer-btn">
+                            <i class="fas fa-plus"></i> Add Extra Prayer
+                        </button>
+                    </div>
+                    
+                    <!-- Manage Extra Prayers -->
+                    <div class="manage-extra-prayers" id="manage-extra-prayers" style="display: none;">
+                        <h3 class="section-title">
+                            <i class="fas fa-list"></i> Manage Extra Prayers
+                        </h3>
+                        <div class="extra-prayers-list" id="extra-prayers-list">
+                            <!-- Extra prayers will be listed here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Store Page Content - UPDATED -->
+        <div class="main-content" id="store-content">
+            <div class="dashboard-content">
+                <h2 class="page-title">
+                    <i class="fas fa-store"></i> Ramadan Store
+                </h2>
+                
+                <!-- Product Management Section (Admin Only) -->
+                <div class="product-management" id="product-management">
+                    <h3 style="color: #2d8c5a; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-cog"></i> Manage Store Products
+                    </h3>
+                    <form id="product-form">
+                        <div class="form-group">
+                            <label for="product-name">
+                                <i class="fas fa-tag"></i> Product Name
+                            </label>
+                            <input type="text" id="product-name" class="form-control" placeholder="Enter product name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-price">
+                                <i class="fas fa-rupee-sign"></i> Price (₹)
+                            </label>
+                            <input type="number" id="product-price" class="form-control" placeholder="Enter price" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-description">
+                                <i class="fas fa-align-left"></i> Description
+                            </label>
+                            <textarea id="product-description" class="form-control" rows="3" placeholder="Enter product description" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-image-url">
+                                <i class="fas fa-image"></i> Image URL (Optional)
+                            </label>
+                            <input type="text" id="product-image-url" class="form-control" placeholder="https://example.com/image.jpg">
+                        </div>
+                        <div id="product-error" class="alert alert-error hidden">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span></span>
+                        </div>
+                        <div class="form-row">
+                            <button type="submit" class="btn btn-primary" id="add-product-btn">
+                                <i class="fas fa-plus"></i> Add Product
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="cancel-edit-btn" style="display: none;">
+                                <i class="fas fa-times"></i> Cancel Edit
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="products-grid" id="products-grid">
+                    <!-- Products will be loaded here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dashboard Page Content -->
+        <div class="main-content" id="dashboard-content">
+            <div class="dashboard-content">
+                <h2 class="page-title">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </h2>
+                
+                <div class="ticket-section">
+                    <h3 style="color: #2d8c5a; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-ticket-alt"></i> Create Support Ticket
+                    </h3>
+                    <div id="ticket-info" class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        You can create up to 3 tickets per day. Today you have created <span id="tickets-today">0</span> ticket(s).
+                    </div>
+                    
+                    <form class="ticket-form" id="ticket-form">
+                        <div class="form-group">
+                            <label for="ticket-subject">
+                                <i class="fas fa-heading"></i> Subject
+                            </label>
+                            <input type="text" id="ticket-subject" class="form-control" placeholder="Enter ticket subject" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ticket-message">
+                                <i class="fas fa-comment"></i> Message
+                            </label>
+                            <textarea id="ticket-message" class="form-control" rows="4" placeholder="Describe your issue" required></textarea>
+                        </div>
+                        <div id="ticket-error" class="alert alert-error hidden">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="submit-ticket-btn">
+                            <i class="fas fa-paper-plane"></i> Submit Ticket
+                        </button>
+                    </form>
+                    
+                    <div class="ticket-list">
+                        <h4 style="color: #2d8c5a; margin-top: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-history"></i> Your Tickets
+                        </h4>
+                        <div id="user-tickets">
+                            <!-- Tickets will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Admin Ticket Management -->
+                <div id="admin-tickets-section" class="ticket-section" style="display: none;">
+                    <h3 style="color: #2d8c5a; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-user-cog"></i> Admin - All Tickets
+                    </h3>
+                    <div id="admin-tickets">
+                        <!-- Admin tickets will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Profile Page Content -->
+        <div class="main-content" id="profile-content">
+            <div class="profile-section">
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div class="profile-avatar" id="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h3 id="profile-name">Guest User</h3>
+                            <p id="profile-email">Not logged in</p>
+                            <p id="profile-role" class="user-display" style="display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px 15px; border-radius: 20px; background: rgba(45, 140, 90, 0.1);">
+                                <i class="fas fa-user-tag"></i> Guest
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-info-circle"></i> Account Status
+                        </label>
+                        <div id="account-status" class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Please login to access all features
+                        </div>
+                    </div>
+                    
+                    <div id="profile-stats" style="margin-top: 20px; display: none;">
+                        <h4 style="color: #2d8c5a; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-chart-bar"></i> Your Statistics
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                            <div style="background: linear-gradient(135deg, #f0f7f3 0%, #e0efe8 100%); padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #d4edda;">
+                                <div style="font-size: 24px; font-weight: bold; color: #2d8c5a;" id="total-tickets">0</div>
+                                <div style="font-size: 14px; color: #666; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <i class="fas fa-ticket-alt"></i> Total Tickets
+                                </div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, #f0f7f3 0%, #e0efe8 100%); padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #d4edda;">
+                                <div style="font-size: 24px; font-weight: bold; color: #2d8c5a;" id="resolved-tickets">0</div>
+                                <div style="font-size: 14px; color: #666; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <i class="fas fa-check-circle"></i> Resolved
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© <span id="current-year"></span> Masjid Abutalah - All Rights Reserved | Always verify times with local mosque</p>
+            <p style="margin-top: 10px; font-size: 12px; color: #888;">
+                <i class="fas fa-heart" style="color: #e74c3c;"></i> Made with love for the Muslim community
+            </p>
+        </footer>
+    </div>
+    
+    <script>
+        // Firebase Configuration (COMPLETE VERSION - missing databaseURL added)
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-MCpoBC-626_5JU59f98pOygaCm1RO90",
+            authDomain: "abutalah-d690f.firebaseapp.com",
+            databaseURL: "https://abutalah-d690f-default-rtdb.firebaseio.com", // YEH ADD KIYA
+            projectId: "abutalah-d690f",
+            storageBucket: "abutalah-d690f.firebasestorage.app",
+            messagingSenderId: "459877871118",
+            appId: "1:459877871118:web:679060d22d2a10431b165f",
+            measurementId: "G-PF85DVPCTD"
+        };
+
+        // Initialize Firebase with messaging
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let messaging = null;
+        
+        // Fixed 5 prayers only (removed Tahajjud from default)
+        const defaultPrayerTimes = {
+            fajr: { name: "Fajr", start: "05:00", azan: "05:15", zamaat: "05:30", end: "06:00", icon: "fas fa-sun" },
+            dhuhr: { name: "Dhuhr", start: "12:30", azan: "12:45", zamaat: "13:00", end: "13:30", icon: "fas fa-sun" },
+            asr: { name: "Asr", start: "15:30", azan: "15:45", zamaat: "16:00", end: "16:30", icon: "fas fa-cloud-sun" },
+            maghrib: { name: "Maghrib", start: "18:15", azan: "18:20", zamaat: "18:30", end: "18:45", icon: "fas fa-moon" },
+            isha: { name: "Isha", start: "19:30", azan: "19:45", zamaat: "20:00", end: "20:30", icon: "fas fa-star" }
+        };
+        
+        let extraPrayers = [];
+        let adminMinimized = false;
+        let currentUser = null;
+        let isAdmin = false;
+        let isSpecialAdmin = false;
+        let editingProductId = null;
+        let editingExtraPrayerId = null;
+        
+        // Specific Admin UID
+        const SPECIAL_ADMIN_UID = "TC3HDbP5OaMQCg60bR2EwOdxTy72";
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current year in footer
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+            
+            // Load saved data
+            loadData();
+            
+            // Update current time
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Setup Firebase auth state listener - FIXED VERSION
+            setupAuthListener();
+            
+            // Setup navigation
+            setupNavigation();
+            
+            // Show login first screen
+            showLoginFirstScreen();
+            
+            // Setup back to top button
+            setupBackToTop();
+            
+            // Initialize FCM if supported
+            initializeFCM();
+            
+            // Setup menu functionality
+            setupMenu();
+        });
+        
+        // Setup menu functionality
+        function setupMenu() {
+            const menuButton = document.getElementById('menu-button');
+            const menuDropdown = document.getElementById('menu-dropdown');
+            
+            // Toggle menu dropdown
+            menuButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                menuDropdown.classList.toggle('active');
+            });
+            
+            // Close menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!menuDropdown.contains(e.target) && !menuButton.contains(e.target)) {
+                    menuDropdown.classList.remove('active');
+                }
+            });
+        }
+        
+        // Menu functions
+        function navigateToDashboard() {
+            document.querySelector('.menu-dropdown').classList.remove('active');
+            document.querySelector('.nav-link[data-page="dashboard"]').click();
+        }
+        
+        function requestNewFeature() {
+            document.querySelector('.menu-dropdown').classList.remove('active');
+            if (currentUser) {
+                // Pre-fill ticket form with feature request
+                document.getElementById('ticket-subject').value = "New Feature Request";
+                document.querySelector('.nav-link[data-page="dashboard"]').click();
+                setTimeout(() => {
+                    document.getElementById('ticket-message').focus();
+                }, 300);
+            } else {
+                document.getElementById('auth-modal').classList.add('active');
+            }
+        }
+        
+        function openSupportWhatsApp() {
+            document.querySelector('.menu-dropdown').classList.remove('active');
+            const phoneNumber = "7775965170";
+            const message = "Assalamualikum, I need support with Masjid Abutalah app.";
+            const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+        
+        function navigateToProfile() {
+            document.querySelector('.menu-dropdown').classList.remove('active');
+            document.querySelector('.nav-link[data-page="profile"]').click();
+        }
+        
+        function logoutUser() {
+            document.querySelector('.menu-dropdown').classList.remove('active');
+            auth.signOut();
+        }
+        
+        // Setup back to top button
+        function setupBackToTop() {
+            const backToTopBtn = document.getElementById('back-to-top');
+            
+            window.addEventListener('scroll', () => {
+                if (window.pageYOffset > 300) {
+                    backToTopBtn.classList.remove('hidden');
+                } else {
+                    backToTopBtn.classList.add('hidden');
+                }
+            });
+            
+            backToTopBtn.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        }
+        
+        // Show login first screen
+        function showLoginFirstScreen() {
+            document.getElementById('login-first-screen').classList.remove('hidden');
+            document.getElementById('main-container').classList.remove('active');
+        }
+        
+        // Hide login first screen and show main app
+        function hideLoginFirstScreen() {
+            document.getElementById('login-first-screen').classList.add('hidden');
+            document.getElementById('main-container').classList.add('active');
+            
+            // Render prayer times table
+            renderPrayerTimes();
+            
+            // Setup admin forms
+            setupAdminForms();
+            
+            // Update prayer status
+            updatePrayerStatus();
+            setInterval(updatePrayerStatus, 60000);
+            
+            // Load products
+            loadProducts();
+        }
+        
+        // Initialize Firebase Cloud Messaging - FIXED VERSION
+        async function initializeFCM() {
+            // Check if browser supports notifications
+            if (!('Notification' in window)) {
+                console.log('This browser does not support notifications');
+                return;
+            }
+            
+            // Check if Firebase messaging is supported
+            if (!firebase.messaging.isSupported()) {
+                console.log('Firebase messaging not supported');
+                return;
+            }
+            
+            try {
+                messaging = firebase.messaging();
+                
+                // Request permission and get token when user clicks enable - FIXED VERSION
+                document.getElementById('enable-notifications').addEventListener('click', async () => {
+                    await getFCMTokenAndSave();
+                });
+                
+                // Handle deny button
+                document.getElementById('deny-notifications').addEventListener('click', () => {
+                    document.getElementById('notification-permission-banner').classList.add('hidden');
+                    localStorage.setItem('notificationDenied', 'true');
+                });
+                
+                // Check current permission status
+                if (Notification.permission === 'granted') {
+                    // Already granted, get token silently
+                    try {
+                        const token = await messaging.getToken({
+                            vapidKey: 'BIBZUJ1SN-KQ4R3XoIq-LrqW5gDX2n_HaLm_jtOqi0mpIgEjHZzZCTNHEJQWJgNqE48UhxctcW8X6JqYHMBm83o'
+                        });
+                        
+                        if (token && currentUser) {
+                            await db.collection('users').doc(currentUser.uid).update({
+                                fcmToken: token,
+                                notificationEnabled: true,
+                                notificationPermissionGranted: true
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error getting existing token:', error);
+                    }
+                } else if (Notification.permission === 'default' && 
+                          !localStorage.getItem('notificationDenied')) {
+                    // Show permission banner after delay - FIXED VERSION
+                    setTimeout(() => {
+                        const banner = document.getElementById('notification-permission-banner');
+                        if (banner && currentUser && !banner.classList.contains('shown-before')) {
+                            banner.classList.remove('hidden');
+                            banner.classList.add('shown-before');
+                        }
+                    }, 3000); // Show after 3 seconds
+                }
+                
+                // Handle incoming messages when app is in foreground
+                messaging.onMessage((payload) => {
+                    console.log('Message received in foreground:', payload);
+                    
+                    // Show in-app notification
+                    showInAppNotification(payload);
+                    
+                    // Also show browser notification if permission granted
+                    if (Notification.permission === 'granted') {
+                        const title = payload.notification?.title || 'Masjid Abutalah';
+                        const options = {
+                            body: payload.notification?.body || 'New update',
+                            icon: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',
+                            badge: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',
+                            tag: 'masjid-notification'
+                        };
+                        
+                        // Use Service Worker if available, otherwise use Notification API
+                        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                            navigator.serviceWorker.ready.then(registration => {
+                                registration.showNotification(title, options);
+                            });
+                        } else {
+                            new Notification(title, options);
+                        }
+                    }
+                });
+                
+            } catch (error) {
+                console.error('FCM initialization error:', error);
+            }
+        }
+        
+        // Get FCM Token and Save - FIXED VERSION
+        async function getFCMTokenAndSave() {
+            if (!currentUser) {
+                alert('Please login first to enable notifications');
+                return null;
+            }
+            
+            try {
+                console.log('1. Requesting notification permission...');
+                
+                // Request permission
+                const permission = await Notification.requestPermission();
+                console.log('Permission result:', permission);
+                
+                if (permission !== 'granted') {
+                    alert('Notification permission denied. Please allow notifications from browser settings.');
+                    return null;
+                }
+                
+                console.log('2. Getting FCM token...');
+                
+                // Initialize messaging if not already done
+                if (!messaging) {
+                    messaging = firebase.messaging();
+                }
+                
+                // Get FCM token
+                const token = await messaging.getToken({
+                    vapidKey: 'BIBZUJ1SN-KQ4R3XoIq-LrqW5gDX2n_HaLm_jtOqi0mpIgEjHZzZCTNHEJQWJgNqE48UhxctcW8X6JqYHMBm83o'
+                });
+                
+                console.log('3. FCM Token received:', token ? 'YES (' + token.length + ' chars)' : 'NO');
+                
+                if (!token) {
+                    alert('Could not generate FCM token. Please try again.');
+                    return null;
+                }
+                
+                // Show token info (for debugging)
+                console.log('Token first 50 chars:', token.substring(0, 50));
+                console.log('Full Token:', token);
+                
+                // Save to Firestore
+                console.log('4. Saving token to Firestore...');
+                
+                await db.collection('users').doc(currentUser.uid).set({
+                    fcmToken: token,
+                    notificationEnabled: true,
+                    notificationPermissionGranted: true,
+                    notificationEnabledAt: new Date().toISOString(),
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true }); // merge: true means update if exists, create if not
+                
+                console.log('5. Token saved successfully!');
+                
+                alert(`✅ Notifications enabled successfully!\n\nYour FCM Token has been saved to database.\n\nToken (first 30 chars): ${token.substring(0, 30)}...`);
+                
+                // Hide permission banner
+                document.getElementById('notification-permission-banner').classList.add('hidden');
+                
+                return token;
+                
+            } catch (error) {
+                console.error('Error getting FCM token:', error);
+                
+                // Specific error messages
+                if (error.code === 'messaging/permission-blocked') {
+                    alert('Notifications are blocked by browser. Please enable them in browser settings.');
+                } else if (error.code === 'messaging/permission-default') {
+                    alert('Please allow notifications when prompted.');
+                } else {
+                    alert('Error: ' + error.message);
+                }
+                
+                return null;
+            }
+        }
+        
+        // Show in-app notification
+        function showInAppNotification(payload) {
+            const notificationDiv = document.createElement('div');
+            notificationDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #1a5e3f 0%, #2d8c5a 100%);
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+                z-index: 9999;
+                max-width: 350px;
+                animation: slideIn 0.3s ease;
+                border-left: 5px solid #f1c40f;
+            `;
+            
+            notificationDiv.innerHTML = `
+                <div style="display: flex; align-items: flex-start; gap: 10px;">
+                    <div style="font-size: 20px; color: #f1c40f;">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: bold; margin-bottom: 5px; font-size: 16px;">
+                            ${payload.notification?.title || 'Notification'}
+                        </div>
+                        <div style="font-size: 14px; opacity: 0.9;">
+                            ${payload.notification?.body || 'New update'}
+                        </div>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.style.display='none'" style="background: none; border: none; color: white; cursor: pointer; font-size: 18px;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notificationDiv);
+            
+            // Remove after 8 seconds
+            setTimeout(() => {
+                if (notificationDiv.parentElement) {
+                    notificationDiv.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => {
+                        if (notificationDiv.parentElement) {
+                            document.body.removeChild(notificationDiv);
+                        }
+                    }, 300);
+                }
+            }, 8000);
+        }
+        
+        // Send notification to all users (Admin function) - NO INDEX REQUIRED VERSION
+        async function sendNotificationToAll(title, body) {
+            if (!isAdmin) {
+                alert('Only admin can send notifications');
+                return;
+            }
+            
+            try {
+                // Get ALL users first (NO WHERE CLAUSE - NO INDEX NEEDED)
+                console.log('Fetching all users...');
+                const usersSnapshot = await db.collection('users').get();
+                
+                if (usersSnapshot.empty) {
+                    alert('No users found in database.');
+                    return;
+                }
+                
+                console.log('Total users found:', usersSnapshot.size);
+                
+                // Filter in JavaScript (not in Firestore query)
+                const tokens = [];
+                usersSnapshot.forEach(doc => {
+                    const userData = doc.data();
+                    // Check both conditions in JavaScript
+                    if (userData.notificationEnabled === true && 
+                        userData.fcmToken && 
+                        userData.fcmToken.trim() !== '') {
+                        tokens.push(userData.fcmToken);
+                        console.log('User with token:', userData.email || userData.name || 'Unknown');
+                    }
+                });
+                
+                if (tokens.length === 0) {
+                    alert('No users have enabled notifications yet.');
+                    return;
+                }
+                
+                console.log('Users with tokens:', tokens.length);
+                
+                // Save notification record
+                const notificationRef = await db.collection('notifications').add({
+                    title: title,
+                    body: body,
+                    sentBy: currentUser.uid,
+                    sentByEmail: currentUser.email,
+                    sentAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    recipientCount: tokens.length
+                });
+                
+                alert(`✅ Notification "${title}" will be sent to ${tokens.length} users!\n\nMessage: ${body}\n\nNote: This is a demo. In production, you would use Cloud Functions to send actual push notifications.`);
+                
+                return tokens.length;
+                
+            } catch (error) {
+                console.error('Error sending notification:', error);
+                
+                // More user-friendly error message
+                if (error.message.includes('index')) {
+                    alert('Firestore index error. Using fallback method. Notification saved but not sent to users.');
+                } else {
+                    alert('Error: ' + error.message);
+                }
+                
+                return 0;
+            }
+        }
+        
+        // View all FCM tokens (Admin function)
+        async function viewAllFCMTokens() {
+            if (!isAdmin) {
+                alert('Only admin can view tokens');
+                return;
+            }
+            
+            try {
+                console.log('Fetching all users...');
+                const usersSnapshot = await db.collection('users').get();
+                
+                if (usersSnapshot.empty) {
+                    alert('No users found in database');
+                    return;
+                }
+                
+                console.log('Total users:', usersSnapshot.size);
+                
+                let report = '📊 FCM TOKENS REPORT\n';
+                report += '=====================\n\n';
+                
+                let usersWithToken = 0;
+                let usersWithoutToken = 0;
+                
+                usersSnapshot.forEach(doc => {
+                    const userData = doc.data();
+                    const userId = doc.id;
+                    
+                    report += `👤 User: ${userData.name || userData.email || 'Unknown'}\n`;
+                    report += `   Email: ${userData.email || 'N/A'}\n`;
+                    report += `   User ID: ${userId.substring(0, 8)}...\n`;
+                    
+                    if (userData.fcmToken) {
+                        usersWithToken++;
+                        report += `   ✅ Has FCM Token: YES\n`;
+                        report += `   Token (first 30 chars): ${userData.fcmToken.substring(0, 30)}...\n`;
+                        report += `   Notification Enabled: ${userData.notificationEnabled ? 'YES' : 'NO'}\n`;
+                    } else {
+                        usersWithoutToken++;
+                        report += `   ❌ Has FCM Token: NO\n`;
+                    }
+                    
+                    report += `   Role: ${userData.role || 'user'}\n`;
+                    report += `   ---\n`;
+                });
+                
+                report += `\n📈 SUMMARY:\n`;
+                report += `Total Users: ${usersSnapshot.size}\n`;
+                report += `Users with FCM Token: ${usersWithToken}\n`;
+                report += `Users without FCM Token: ${usersWithoutToken}\n`;
+                
+                // Display in alert (might be too large, so also log to console)
+                console.log(report);
+                
+                if (usersWithToken > 0) {
+                    // Show summary in alert
+                    alert(`📊 FCM Tokens Found:\n\nTotal Users: ${usersSnapshot.size}\nWith Token: ${usersWithToken}\nWithout Token: ${usersWithoutToken}\n\nCheck browser console (F12) for detailed report.`);
+                } else {
+                    alert('❌ No users have FCM tokens yet. Users need to enable notifications.');
+                }
+                
+            } catch (error) {
+                console.error('Error fetching tokens:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        // Test notification function
+        async function sendTestNotification() {
+            if (!isAdmin) {
+                alert('Only admin can send test notifications');
+                return;
+            }
+            
+            const title = prompt('Enter notification title:', 'Test Notification');
+            if (!title) return;
+            
+            const body = prompt('Enter notification message:', 'This is a test notification from Masjid Abutalah');
+            if (!body) return;
+            
+            const result = await sendNotificationToAll(title, body);
+            if (result > 0) {
+                alert(`Test notification sent to ${result} users!`);
+            }
+        }
+        
+        // Firebase Auth State Listener - COMPLETELY FIXED VERSION
+        function setupAuthListener() {
+            auth.onAuthStateChanged(async (user) => {
+                currentUser = user;
+                
+                if (user) {
+                    console.log('User logged in:', user.uid, user.email);
+                    
+                    // User is signed in - hide login screen, show app
+                    hideLoginFirstScreen();
+                    
+                    // Show only name (not email) in top-right
+                    const displayName = user.displayName || user.email.split('@')[0];
+                    document.getElementById('user-display').innerHTML = `<i class="fas fa-user"></i> ${displayName}`;
+                    document.getElementById('login-button').style.display = 'none';
+                    
+                    document.getElementById('profile-name').textContent = displayName;
+                    document.getElementById('profile-email').textContent = user.email;
+                    
+                    // IMPORTANT: Check if user exists in Firestore, create if not
+                    try {
+                        const userDoc = await db.collection('users').doc(user.uid).get();
+                        
+                        if (!userDoc.exists) {
+                            // User doesn't exist in Firestore, create document
+                            console.log('Creating new user document in Firestore...');
+                            await db.collection('users').doc(user.uid).set({
+                                email: user.email,
+                                name: user.displayName || user.email.split('@')[0],
+                                role: 'user',
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            console.log('User document created successfully');
+                        } else {
+                            console.log('User document found in Firestore');
+                        }
+                        
+                        // Now check user role
+                        const userData = userDoc.data() || {};
+                        document.getElementById('profile-role').innerHTML = `<i class="fas fa-user-tag"></i> ${userData.role || 'User'}`;
+                        
+                        // Check if user is admin (specific UID or Firestore role)
+                        if (user.uid === SPECIAL_ADMIN_UID || userData.role === 'admin') {
+                            isAdmin = true;
+                            isSpecialAdmin = (user.uid === SPECIAL_ADMIN_UID);
+                            
+                            document.getElementById('profile-role').innerHTML = isSpecialAdmin ? 
+                                `<i class="fas fa-crown"></i> Super Admin` : 
+                                `<i class="fas fa-user-cog"></i> Admin`;
+                            
+                            document.getElementById('admin-tickets-section').style.display = 'block';
+                            document.getElementById('admin-panel').classList.add('active');
+                            document.getElementById('product-management').classList.add('active');
+                            document.getElementById('manage-extra-prayers').style.display = 'block';
+                            
+                            // Show admin tools
+                            document.getElementById('view-fcm-tokens').style.display = 'inline-flex';
+                            document.getElementById('send-test-notification').style.display = 'inline-flex';
+                            
+                            loadExtraPrayersList();
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error accessing Firestore:', error);
+                        // Firestore error par bhi user ko login rehne do
+                        alert('Database connection issue, but you can continue using the app.');
+                    }
+                    
+                    document.getElementById('account-status').className = 'alert alert-success';
+                    document.getElementById('account-status').innerHTML = `<i class="fas fa-check-circle"></i> Logged in`;
+                    document.getElementById('profile-stats').style.display = 'block';
+                    
+                    // Load user tickets and stats
+                    loadUserTickets();
+                    loadAdminTickets();
+                    loadTicketStats();
+                    
+                    // NOTIFICATION BANNER: Show if permission not decided yet - FIXED VERSION
+                    setTimeout(() => {
+                        const banner = document.getElementById('notification-permission-banner');
+                        if (banner && Notification.permission === 'default' && 
+                            !localStorage.getItem('notificationDenied') && 
+                            !banner.classList.contains('shown-before')) {
+                            banner.classList.remove('hidden');
+                            banner.classList.add('shown-before');
+                        }
+                    }, 2000);
+                    
+                } else {
+                    console.log('User signed out');
+                    // User is signed out - show login screen
+                    showLoginFirstScreen();
+                    
+                    document.getElementById('user-display').innerHTML = `<i class="fas fa-user"></i> Guest User`;
+                    document.getElementById('login-button').style.display = 'inline-block';
+                    
+                    document.getElementById('profile-name').textContent = 'Guest User';
+                    document.getElementById('profile-email').textContent = 'Not logged in';
+                    document.getElementById('profile-role').innerHTML = `<i class="fas fa-user-tag"></i> Guest`;
+                    
+                    document.getElementById('account-status').className = 'alert alert-info';
+                    document.getElementById('account-status').innerHTML = `<i class="fas fa-info-circle"></i> Please login to access all features`;
+                    document.getElementById('profile-stats').style.display = 'none';
+                    
+                    isAdmin = false;
+                    isSpecialAdmin = false;
+                    document.getElementById('admin-tickets-section').style.display = 'none';
+                    document.getElementById('admin-panel').classList.remove('active');
+                    document.getElementById('product-management').classList.remove('active');
+                    document.getElementById('manage-extra-prayers').style.display = 'none';
+                    
+                    // Hide admin tools
+                    document.getElementById('view-fcm-tokens').style.display = 'none';
+                    document.getElementById('send-test-notification').style.display = 'none';
+                }
+                
+                // Close auth modal if open
+                document.getElementById('auth-modal').classList.remove('active');
+            });
+        }
+        
+        // Setup navigation
+        function setupNavigation() {
+            // Navigation links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    if (!currentUser) {
+                        document.getElementById('auth-modal').classList.add('active');
+                        return;
+                    }
+                    
+                    // Remove active class from all links
+                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    // Add active class to clicked link
+                    this.classList.add('active');
+                    
+                    // Hide all content sections
+                    document.querySelectorAll('.main-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Show selected content section
+                    const page = this.getAttribute('data-page');
+                    document.getElementById(`${page}-content`).classList.add('active');
+                    
+                    // Scroll to top
+                    window.scrollTo(0, 0);
+                });
+            });
+        }
+        
+        // Update current time display
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true 
+            });
+            const dateString = now.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            document.getElementById('current-time').innerHTML = `<i class="fas fa-clock"></i> ${dateString} | ${timeString}`;
+        }
+        
+        // Render prayer times in table
+        function renderPrayerTimes() {
+            const tableBody = document.getElementById('prayer-times-table');
+            tableBody.innerHTML = '';
+            
+            // First show all 5 fixed prayers
+            Object.keys(defaultPrayerTimes).forEach(prayerKey => {
+                const prayer = defaultPrayerTimes[prayerKey];
+                const isCurrent = getCurrentPrayer() === prayerKey;
+                
+                const row = document.createElement('tr');
+                row.id = `prayer-row-${prayerKey}`;
+                if (isCurrent) row.classList.add('current-prayer');
+                
+                // Determine status
+                let statusText = 'Upcoming';
+                let statusClass = 'status-upcoming';
+                
+                if (isCurrent) {
+                    statusText = 'NOW';
+                    statusClass = 'status-current';
+                } else {
+                    // Check if prayer has passed
+                    const now = new Date();
+                    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                    
+                    if (prayer.end !== "N/A") {
+                        const endTime = convertToMinutes(prayer.end);
+                        const nowInMinutes = convertToMinutes(currentTime);
+                        
+                        if (nowInMinutes > endTime) {
+                            statusText = 'Passed';
+                            statusClass = 'status-passed';
+                        }
+                    }
+                }
+                
+                row.innerHTML = `
+                    <td>
+                        <div class="prayer-name">
+                            <i class="${prayer.icon} prayer-icon"></i>
+                            ${prayer.name}
+                        </div>
+                    </td>
+                    <td>${prayer.start}</td>
+                    <td>${prayer.azan}</td>
+                    <td>${prayer.zamaat}</td>
+                    <td>${prayer.end}</td>
+                    <td>
+                        <span class="prayer-status ${statusClass}">
+                            ${statusText}
+                        </span>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Then show extra prayers
+            extraPrayers.forEach((prayer, index) => {
+                const prayerKey = `extra${index}`;
+                const isCurrent = getCurrentPrayer() === prayerKey;
+                
+                const row = document.createElement('tr');
+                row.id = `prayer-row-${prayerKey}`;
+                if (isCurrent) row.classList.add('current-prayer');
+                row.style.backgroundColor = '#f8f9fa';
+                
+                // Determine status
+                let statusText = 'Upcoming';
+                let statusClass = 'status-upcoming';
+                
+                if (isCurrent) {
+                    statusText = 'NOW';
+                    statusClass = 'status-current';
+                } else {
+                    // Check if prayer has passed
+                    const now = new Date();
+                    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                    
+                    if (prayer.end !== "N/A") {
+                        const endTime = convertToMinutes(prayer.end);
+                        const nowInMinutes = convertToMinutes(currentTime);
+                        
+                        if (nowInMinutes > endTime) {
+                            statusText = 'Passed';
+                            statusClass = 'status-passed';
+                        }
+                    }
+                }
+                
+                row.innerHTML = `
+                    <td>
+                        <div class="prayer-name">
+                            <i class="fas fa-pray prayer-icon"></i>
+                            ${prayer.name} <span style="font-size: 11px; color: #888; margin-left: 5px;">(Extra)</span>
+                        </div>
+                    </td>
+                    <td>${prayer.start}</td>
+                    <td>${prayer.azan}</td>
+                    <td>${prayer.zamaat}</td>
+                    <td>${prayer.end}</td>
+                    <td>
+                        <span class="prayer-status ${statusClass}">
+                            ${statusText}
+                        </span>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Setup admin forms
+        function setupAdminForms() {
+            const formContainer = document.getElementById('prayer-times-form');
+            formContainer.innerHTML = '';
+            
+            // Create compact form for each prayer
+            Object.keys(defaultPrayerTimes).forEach(prayerKey => {
+                const prayer = defaultPrayerTimes[prayerKey];
+                
+                const formGroup = document.createElement('div');
+                formGroup.className = 'form-group';
+                formGroup.innerHTML = `
+                    <label for="${prayerKey}-name">
+                        <i class="${prayer.icon}"></i> ${prayer.name}
+                    </label>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="time" id="${prayerKey}-start" class="form-control" value="${prayer.start}">
+                        </div>
+                        <div class="form-group">
+                            <input type="time" id="${prayerKey}-azan" class="form-control" value="${prayer.azan}">
+                        </div>
+                        <div class="form-group">
+                            <input type="time" id="${prayerKey}-zamaat" class="form-control" value="${prayer.zamaat}">
+                        </div>
+                        <div class="form-group">
+                            <input type="time" id="${prayerKey}-end" class="form-control" value="${prayer.end}">
+                        </div>
+                    </div>
+                `;
+                
+                formContainer.appendChild(formGroup);
+            });
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Login first screen buttons
+            document.getElementById('show-login-first').addEventListener('click', () => {
+                document.getElementById('auth-modal').classList.add('active');
+                document.getElementById('login-tab').classList.add('active');
+                document.getElementById('signup-tab').classList.remove('active');
+                document.getElementById('login-content').classList.add('active');
+                document.getElementById('signup-content').classList.remove('active');
+            });
+            
+            document.getElementById('show-signup-first').addEventListener('click', () => {
+                document.getElementById('auth-modal').classList.add('active');
+                document.getElementById('signup-tab').classList.add('active');
+                document.getElementById('login-tab').classList.remove('active');
+                document.getElementById('signup-content').classList.add('active');
+                document.getElementById('login-content').classList.remove('active');
+            });
+            
+            // Toggle admin panel
+            document.getElementById('toggle-admin').addEventListener('click', function() {
+                const adminForms = document.getElementById('admin-forms');
+                const toggleBtn = document.getElementById('toggle-admin');
+                
+                if (adminMinimized) {
+                    adminForms.style.display = 'block';
+                    toggleBtn.innerHTML = '<i class="fas fa-compress"></i> Minimize';
+                } else {
+                    adminForms.style.display = 'none';
+                    toggleBtn.innerHTML = '<i class="fas fa-expand"></i> Expand';
+                }
+                
+                adminMinimized = !adminMinimized;
+            });
+            
+            // Update notice
+            document.getElementById('update-notice-btn').addEventListener('click', updateNotice);
+            
+            // Save prayer times
+            document.getElementById('save-prayer-times-btn').addEventListener('click', savePrayerTimes);
+            
+            // Add extra prayer
+            document.getElementById('add-extra-prayer-btn').addEventListener('click', addExtraPrayer);
+            
+            // Clear all data
+            document.getElementById('clear-data').addEventListener('click', clearAllData);
+            
+            // Auth buttons
+            document.getElementById('login-button').addEventListener('click', () => {
+                document.getElementById('auth-modal').classList.add('active');
+            });
+            
+            // Auth modal tabs
+            document.getElementById('show-signup').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('login-tab').classList.remove('active');
+                document.getElementById('signup-tab').classList.add('active');
+                document.getElementById('login-content').classList.remove('active');
+                document.getElementById('signup-content').classList.add('active');
+            });
+            
+            document.getElementById('show-login').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('signup-tab').classList.remove('active');
+                document.getElementById('login-tab').classList.add('active');
+                document.getElementById('signup-content').classList.remove('active');
+                document.getElementById('login-content').classList.add('active');
+            });
+            
+            // Login/Register
+            document.getElementById('login-btn').addEventListener('click', loginUser);
+            document.getElementById('signup-btn').addEventListener('click', registerUser);
+            
+            // Close auth modal when clicking outside
+            document.getElementById('auth-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'auth-modal') {
+                    document.getElementById('auth-modal').classList.remove('active');
+                }
+            });
+            
+            // Ticket submission
+            document.getElementById('ticket-form').addEventListener('submit', submitTicket);
+            
+            // Product management
+            document.getElementById('product-form').addEventListener('submit', handleProductSubmit);
+            document.getElementById('cancel-edit-btn').addEventListener('click', cancelProductEdit);
+            
+            // Admin tools
+            document.getElementById('view-fcm-tokens').addEventListener('click', viewAllFCMTokens);
+            document.getElementById('send-test-notification').addEventListener('click', sendTestNotification);
+        }
+        
+        // Load extra prayers list for admin
+        function loadExtraPrayersList() {
+            if (!isAdmin) return;
+            
+            const container = document.getElementById('extra-prayers-list');
+            container.innerHTML = '';
+            
+            if (extraPrayers.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No extra prayers added yet.</p>';
+                return;
+            }
+            
+            extraPrayers.forEach((prayer, index) => {
+                const item = document.createElement('div');
+                item.className = 'extra-prayer-item';
+                item.innerHTML = `
+                    <div class="extra-prayer-info">
+                        <div>
+                            <strong><i class="fas fa-pray"></i> ${prayer.name}</strong>
+                            <div style="font-size: 13px; color: #666; margin-top: 5px;">
+                                Start: ${prayer.start} | Azan: ${prayer.azan} | Zamaat: ${prayer.zamaat} | End: ${prayer.end}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="extra-prayer-actions">
+                        <button class="btn btn-primary" onclick="editExtraPrayer(${index})" style="padding: 8px 12px; font-size: 13px;">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteExtraPrayer(${index})" style="padding: 8px 12px; font-size: 13px;">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+        
+        // Edit extra prayer
+        window.editExtraPrayer = function(index) {
+            if (!isAdmin) return;
+            
+            const prayer = extraPrayers[index];
+            editingExtraPrayerId = index;
+            
+            document.getElementById('extra-prayer-name').value = prayer.name;
+            document.getElementById('extra-prayer-start').value = prayer.start !== "N/A" ? prayer.start : "";
+            document.getElementById('extra-prayer-azan').value = prayer.azan !== "N/A" ? prayer.azan : "";
+            document.getElementById('extra-prayer-zamaat').value = prayer.zamaat !== "N/A" ? prayer.zamaat : "";
+            document.getElementById('extra-prayer-end').value = prayer.end !== "N/A" ? prayer.end : "";
+            
+            document.getElementById('add-extra-prayer-btn').innerHTML = '<i class="fas fa-save"></i> Update Prayer';
+            
+            // Scroll to form
+            document.getElementById('extra-prayer-name').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Delete extra prayer
+        window.deleteExtraPrayer = function(index) {
+            if (!isAdmin) return;
+            
+            if (confirm('Are you sure you want to delete this extra prayer?')) {
+                extraPrayers.splice(index, 1);
+                localStorage.setItem('extraPrayers', JSON.stringify(extraPrayers));
+                renderPrayerTimes();
+                loadExtraPrayersList();
+                alert('Extra prayer deleted successfully!');
+            }
+        }
+        
+        // Login user
+        async function loginUser() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errorDiv = document.getElementById('login-error');
+            
+            errorDiv.classList.add('hidden');
+            errorDiv.querySelector('span').textContent = '';
+            
+            if (!email || !password) {
+                errorDiv.querySelector('span').textContent = 'Please fill in all fields';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                
+            } catch (error) {
+                errorDiv.querySelector('span').textContent = error.message;
+                errorDiv.classList.remove('hidden');
+            }
+        }
+        
+        // Register new user - FIXED VERSION
+        async function registerUser() {
+            const name = document.getElementById('signup-name').value.trim();
+            const email = document.getElementById('signup-email').value.trim();
+            const password = document.getElementById('signup-password').value;
+            const errorDiv = document.getElementById('signup-error');
+            
+            errorDiv.classList.add('hidden');
+            errorDiv.querySelector('span').textContent = '';
+            
+            // Validation
+            if (!name) {
+                errorDiv.querySelector('span').textContent = 'Please enter your name';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            if (!email) {
+                errorDiv.querySelector('span').textContent = 'Please enter your email';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            if (!password) {
+                errorDiv.querySelector('span').textContent = 'Please enter a password';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            if (password.length < 6) {
+                errorDiv.querySelector('span').textContent = 'Password must be at least 6 characters long';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                
+                // Update profile with name
+                await userCredential.user.updateProfile({
+                    displayName: name
+                });
+                
+                // Save user to Firestore - AUTO CREATE USER DOCUMENT
+                await db.collection('users').doc(userCredential.user.uid).set({
+                    email: email,
+                    name: name,
+                    role: 'user',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // Auto-login successful
+                alert('Registration successful! Welcome to Masjid Abutalah.');
+                
+            } catch (error) {
+                errorDiv.querySelector('span').textContent = error.message;
+                errorDiv.classList.remove('hidden');
+            }
+        }
+        
+        // Submit ticket - NO INDEX REQUIRED VERSION
+        async function submitTicket(e) {
+            e.preventDefault();
+            
+            if (!currentUser) {
+                alert('Please login to create a ticket');
+                document.getElementById('auth-modal').classList.add('active');
+                return;
+            }
+            
+            const subject = document.getElementById('ticket-subject').value.trim();
+            const message = document.getElementById('ticket-message').value.trim();
+            const errorDiv = document.getElementById('ticket-error');
+            
+            errorDiv.classList.add('hidden');
+            errorDiv.querySelector('span').textContent = '';
+            
+            // Validation
+            if (!subject) {
+                errorDiv.querySelector('span').textContent = 'Please enter a subject';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            if (!message) {
+                errorDiv.querySelector('span').textContent = 'Please enter a message';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            // Get ALL tickets and filter in JavaScript (NO INDEX NEEDED)
+            try {
+                const allTicketsSnapshot = await db.collection('tickets').get();
+                
+                // Count today's tickets for this user in JavaScript
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                let todayTicketsCount = 0;
+                allTicketsSnapshot.forEach(doc => {
+                    const ticket = doc.data();
+                    if (ticket.userId === currentUser.uid && ticket.createdAt) {
+                        const ticketDate = ticket.createdAt.toDate();
+                        if (ticketDate >= today) {
+                            todayTicketsCount++;
+                        }
+                    }
+                });
+                
+                if (todayTicketsCount >= 3) {
+                    errorDiv.querySelector('span').textContent = 'You have already created 3 tickets today. Please try again tomorrow.';
+                    errorDiv.classList.remove('hidden');
+                    return;
+                }
+                
+                // Create ticket
+                const ticketRef = await db.collection('tickets').add({
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    userName: currentUser.displayName || currentUser.email.split('@')[0],
+                    subject: subject,
+                    message: message,
+                    status: 'pending',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // Clear form
+                document.getElementById('ticket-form').reset();
+                
+                // Show success message
+                const ticketInfo = document.getElementById('ticket-info');
+                ticketInfo.className = 'alert alert-success';
+                ticketInfo.innerHTML = `<i class="fas fa-check-circle"></i> Ticket submitted successfully! Ticket ID: ${ticketRef.id.substring(0, 8)}. Today you have created <span id="tickets-today">${todayTicketsCount + 1}</span> ticket(s).`;
+                
+                // Reload tickets
+                loadUserTickets();
+                if (isAdmin) {
+                    loadAdminTickets();
+                }
+                loadTicketStats();
+                
+            } catch (error) {
+                errorDiv.querySelector('span').textContent = 'Error submitting ticket: ' + error.message;
+                errorDiv.classList.remove('hidden');
+            }
+        }
+        
+        // Load user tickets - NO INDEX REQUIRED VERSION
+        async function loadUserTickets() {
+            if (!currentUser) return;
+            
+            const ticketsContainer = document.getElementById('user-tickets');
+            ticketsContainer.innerHTML = '<div class="spinner"></div>';
+            
+            try {
+                // Get ALL tickets (NO WHERE CLAUSE - NO INDEX NEEDED)
+                const snapshot = await db.collection('tickets').get();
+                
+                if (snapshot.empty) {
+                    ticketsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No tickets found.</p>';
+                    return;
+                }
+                
+                // Filter by current user in JavaScript
+                const userTickets = [];
+                snapshot.forEach(doc => {
+                    const ticket = doc.data();
+                    if (ticket.userId === currentUser.uid) {
+                        userTickets.push({
+                            id: doc.id,
+                            ...ticket
+                        });
+                    }
+                });
+                
+                // Sort by date (newest first)
+                userTickets.sort((a, b) => {
+                    const dateA = a.createdAt ? a.createdAt.toDate() : new Date(0);
+                    const dateB = b.createdAt ? b.createdAt.toDate() : new Date(0);
+                    return dateB - dateA;
+                });
+                
+                if (userTickets.length === 0) {
+                    ticketsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No tickets found.</p>';
+                    return;
+                }
+                
+                // Display tickets
+                let html = '';
+                userTickets.forEach(ticket => {
+                    const date = ticket.createdAt ? ticket.createdAt.toDate().toLocaleDateString() : 'N/A';
+                    const time = ticket.createdAt ? ticket.createdAt.toDate().toLocaleTimeString() : '';
+                    
+                    html += `
+                        <div class="ticket-item">
+                            <div class="ticket-header">
+                                <strong><i class="fas fa-ticket-alt"></i> ${ticket.subject}</strong>
+                                <span class="ticket-status status-${ticket.status}">
+                                    <i class="fas fa-${ticket.status === 'pending' ? 'clock' : 'check'}"></i> ${ticket.status}
+                                </span>
+                            </div>
+                            <p>${ticket.message}</p>
+                            <div style="font-size: 12px; color: #666; margin-top: 10px;">
+                                <i class="fas fa-calendar"></i> Submitted: ${date} ${time}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                ticketsContainer.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading tickets:', error);
+                ticketsContainer.innerHTML = `<p style="text-align: center; color: #e74c3c; padding: 20px;"><i class="fas fa-exclamation-circle"></i> Error loading tickets</p>`;
+            }
+        }
+        
+        // Load admin tickets
+        async function loadAdminTickets() {
+            if (!isAdmin) return;
+            
+            const ticketsContainer = document.getElementById('admin-tickets');
+            ticketsContainer.innerHTML = '<div class="spinner"></div>';
+            
+            try {
+                const snapshot = await db.collection('tickets')
+                    .orderBy('createdAt', 'desc')
+                    .limit(50) // Limit to 50 tickets
+                    .get();
+                
+                if (snapshot.empty) {
+                    ticketsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No tickets found.</p>';
+                    return;
+                }
+                
+                let html = '';
+                snapshot.forEach(doc => {
+                    const ticket = doc.data();
+                    const date = ticket.createdAt ? ticket.createdAt.toDate().toLocaleDateString() : 'N/A';
+                    const time = ticket.createdAt ? ticket.createdAt.toDate().toLocaleTimeString() : '';
+                    
+                    html += `
+                        <div class="ticket-item">
+                            <div class="ticket-header">
+                                <div>
+                                    <strong><i class="fas fa-ticket-alt"></i> ${ticket.subject}</strong>
+                                    <div style="font-size: 12px; color: #666;">
+                                        <i class="fas fa-user"></i> From: ${ticket.userName} (${ticket.userEmail})
+                                    </div>
+                                </div>
+                                <span class="ticket-status status-${ticket.status}">
+                                    <i class="fas fa-${ticket.status === 'pending' ? 'clock' : 'check'}"></i> ${ticket.status}
+                                </span>
+                            </div>
+                            <p>${ticket.message}</p>
+                            <div style="font-size: 12px; color: #666; margin-top: 10px;">
+                                <i class="fas fa-calendar"></i> Submitted: ${date} ${time} | <i class="fas fa-id-card"></i> ID: ${doc.id.substring(0, 8)}...
+                            </div>
+                            ${ticket.status === 'pending' ? `
+                                <button class="btn btn-primary" onclick="resolveTicket('${doc.id}')" style="margin-top: 10px; padding: 8px 15px; font-size: 13px;">
+                                    <i class="fas fa-check"></i> Mark as Resolved
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                ticketsContainer.innerHTML = html;
+                
+            } catch (error) {
+                ticketsContainer.innerHTML = `<p style="text-align: center; color: #e74c3c; padding: 20px;"><i class="fas fa-exclamation-circle"></i> Error loading tickets: ${error.message}</p>`;
+            }
+        }
+        
+        // Resolve ticket (admin only)
+        window.resolveTicket = async function(ticketId) {
+            if (!isAdmin) return;
+            
+            if (confirm('Are you sure you want to mark this ticket as resolved?')) {
+                try {
+                    await db.collection('tickets').doc(ticketId).update({
+                        status: 'resolved',
+                        resolvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    // Reload tickets
+                    loadAdminTickets();
+                    loadUserTickets();
+                    loadTicketStats();
+                    
+                    alert('Ticket marked as resolved!');
+                } catch (error) {
+                    alert('Error resolving ticket: ' + error.message);
+                }
+            }
+        }
+        
+        // Load ticket statistics - NO INDEX REQUIRED VERSION
+        async function loadTicketStats() {
+            if (!currentUser) return;
+            
+            try {
+                // Get ALL tickets
+                const allTicketsSnapshot = await db.collection('tickets').get();
+                
+                let totalTickets = 0;
+                let resolvedTickets = 0;
+                let todayTickets = 0;
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                allTicketsSnapshot.forEach(doc => {
+                    const ticket = doc.data();
+                    if (ticket.userId === currentUser.uid) {
+                        totalTickets++;
+                        
+                        if (ticket.status === 'resolved') {
+                            resolvedTickets++;
+                        }
+                        
+                        if (ticket.createdAt) {
+                            const ticketDate = ticket.createdAt.toDate();
+                            if (ticketDate >= today) {
+                                todayTickets++;
+                            }
+                        }
+                    }
+                });
+                
+                document.getElementById('total-tickets').textContent = totalTickets;
+                document.getElementById('resolved-tickets').textContent = resolvedTickets;
+                document.getElementById('tickets-today').textContent = todayTickets;
+                
+            } catch (error) {
+                console.error('Error loading ticket stats:', error);
+            }
+        }
+        
+        // Load products
+        async function loadProducts() {
+            const productsGrid = document.getElementById('products-grid');
+            productsGrid.innerHTML = '<div class="spinner"></div>';
+            
+            try {
+                const snapshot = await db.collection('products').orderBy('createdAt', 'desc').get();
+                
+                if (snapshot.empty) {
+                    productsGrid.innerHTML = '<p style="text-align: center; color: #666; padding: 40px; grid-column: 1 / -1;">No products available yet. Check back soon!</p>';
+                    return;
+                }
+                
+                let html = '';
+                snapshot.forEach(doc => {
+                    const product = doc.data();
+                    const productId = doc.id;
+                    
+                    html += createProductCard(product, productId);
+                });
+                
+                productsGrid.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading products:', error);
+                productsGrid.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;"><i class="fas fa-exclamation-circle"></i> Error loading products. Please try again.</p>';
+            }
+        }
+        
+        // Create product card HTML with INR currency
+        function createProductCard(product, productId = null) {
+            // Convert price from paise to rupees
+            const priceInRupees = (product.price / 100).toFixed(2);
+            
+            const imageHtml = product.imageUrl ? 
+                `<img src="${product.imageUrl}" alt="${product.name}" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\\'fas fa-box-open\\' style=\\'font-size: 48px; color: #ccc;\\'></i>';">` :
+                `<i class="fas fa-box-open" style="font-size: 48px; color: #ccc;"></i>`;
+            
+            // Safe escaping for product data
+            const safeName = product.name ? product.name.replace(/'/g, "\\'").replace(/"/g, '\\"') : '';
+            const safeDescription = product.description ? product.description.replace(/'/g, "\\'").replace(/"/g, '\\"') : '';
+            const safeImageUrl = (product.imageUrl || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+            
+            const adminActions = isAdmin && productId ? `
+                <div class="product-actions">
+                    <button class="action-btn" onclick="window.editProduct('${productId}', '${safeName}', ${priceInRupees}, '${safeDescription}', '${safeImageUrl}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn" onclick="window.deleteProduct('${productId}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            ` : '';
+            
+            return `
+                <div class="product-card" data-id="${productId}">
+                    <div class="product-image">
+                        ${imageHtml}
+                        ${adminActions}
+                    </div>
+                    <div class="product-info">
+                        <h4 style="color: #2d8c5a; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-tag"></i> ${product.name}
+                        </h4>
+                        <p style="color: #666; font-size: 14px; margin-bottom: 15px; line-height: 1.5;">${product.description}</p>
+                        <div style="font-weight: bold; color: #1a5e3f; font-size: 20px; margin-bottom: 15px;">
+                            <i class="fas fa-rupee-sign"></i> ${priceInRupees}
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <i class="fas fa-shopping-cart"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Handle product form submission
+        async function handleProductSubmit(e) {
+            e.preventDefault();
+            
+            if (!isAdmin) {
+                alert('Only admin can manage products');
+                return;
+            }
+            
+            const name = document.getElementById('product-name').value.trim();
+            const priceInput = document.getElementById('product-price').value.trim();
+            const description = document.getElementById('product-description').value.trim();
+            const imageUrl = document.getElementById('product-image-url').value.trim();
+            const errorDiv = document.getElementById('product-error');
+            
+            errorDiv.classList.add('hidden');
+            errorDiv.querySelector('span').textContent = '';
+            
+            // Validation
+            if (!name) {
+                showError('Please enter product name');
+                return;
+            }
+            
+            if (!priceInput) {
+                showError('Please enter product price');
+                return;
+            }
+            
+            const price = parseFloat(priceInput);
+            if (isNaN(price) || price <= 0) {
+                showError('Please enter a valid price');
+                return;
+            }
+            
+            if (!description) {
+                showError('Please enter product description');
+                return;
+            }
+            
+            // Convert to paise (multiply by 100)
+            const priceInPaise = Math.round(price * 100);
+            
+            try {
+                const productData = {
+                    name: name,
+                    price: priceInPaise,
+                    description: description,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                // Add created timestamp for new products
+                if (!editingProductId) {
+                    productData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                }
+                
+                // Add image URL if provided
+                if (imageUrl) {
+                    // Validate URL format
+                    try {
+                        new URL(imageUrl);
+                        productData.imageUrl = imageUrl;
+                    } catch (urlError) {
+                        console.warn('Invalid image URL:', urlError);
+                        productData.imageUrl = ''; // Set empty if invalid
+                    }
+                } else {
+                    productData.imageUrl = '';
+                }
+                
+                let message = '';
+                
+                if (editingProductId) {
+                    // Update existing product
+                    await db.collection('products').doc(editingProductId).update(productData);
+                    message = 'Product updated successfully!';
+                } else {
+                    // Add new product
+                    const docRef = await db.collection('products').add(productData);
+                    message = `Product added successfully! ID: ${docRef.id}`;
+                }
+                
+                // Reset form
+                document.getElementById('product-form').reset();
+                document.getElementById('cancel-edit-btn').style.display = 'none';
+                document.getElementById('add-product-btn').innerHTML = '<i class="fas fa-plus"></i> Add Product';
+                editingProductId = null;
+                
+                // Show success message
+                alert(message);
+                
+                // Reload products
+                loadProducts();
+                
+            } catch (error) {
+                console.error('Product save error:', error);
+                showError('Error saving product: ' + error.message);
+            }
+            
+            function showError(message) {
+                errorDiv.querySelector('span').textContent = message;
+                errorDiv.classList.remove('hidden');
+            }
+        }
+        
+        // Edit product
+        window.editProduct = function(productId, name, price, description, imageUrl) {
+            if (!isAdmin) return;
+            
+            editingProductId = productId;
+            document.getElementById('product-name').value = name;
+            document.getElementById('product-price').value = price;
+            document.getElementById('product-description').value = description;
+            document.getElementById('product-image-url').value = imageUrl || '';
+            document.getElementById('add-product-btn').innerHTML = '<i class="fas fa-save"></i> Update Product';
+            document.getElementById('cancel-edit-btn').style.display = 'inline-block';
+            
+            // Scroll to product form
+            document.getElementById('product-form').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Cancel product edit
+        function cancelProductEdit() {
+            editingProductId = null;
+            document.getElementById('product-form').reset();
+            document.getElementById('add-product-btn').innerHTML = '<i class="fas fa-plus"></i> Add Product';
+            document.getElementById('cancel-edit-btn').style.display = 'none';
+        }
+        
+        // Delete product
+        window.deleteProduct = async function(productId) {
+            if (!isAdmin) return;
+            
+            if (confirm('Are you sure you want to delete this product?')) {
+                try {
+                    await db.collection('products').doc(productId).delete();
+                    alert('Product deleted successfully!');
+                    loadProducts();
+                } catch (error) {
+                    alert('Error deleting product: ' + error.message);
+                }
+            }
+        }
+        
+        // Update notice/announcement with notification sending
+        async function updateNotice() {
+            const title = document.getElementById('notice-title-input').value.trim();
+            const text = document.getElementById('notice-text-input').value.trim();
+            const imageUrl = document.getElementById('notice-image-input').value.trim();
+            
+            if (!title || !text) {
+                alert('Please enter both title and text for the notice');
+                return;
+            }
+            
+            // Update notice banner
+            document.getElementById('notice-title').textContent = title;
+            document.getElementById('notice-text').textContent = text;
+            
+            const noticeImage = document.getElementById('notice-image');
+            if (imageUrl && imageUrl.trim() !== '') {
+                try {
+                    new URL(imageUrl); // Validate URL
+                    noticeImage.src = imageUrl;
+                    noticeImage.style.display = 'block';
+                    noticeImage.onerror = function() {
+                        this.style.display = 'none';
+                        alert('Could not load image from the provided URL');
+                    };
+                } catch (error) {
+                    alert('Please enter a valid image URL');
+                    noticeImage.style.display = 'none';
+                }
+            } else {
+                noticeImage.style.display = 'none';
+            }
+            
+            // Save to localStorage
+            const noticeData = { title, text, imageUrl };
+            localStorage.setItem('prayerNotice', JSON.stringify(noticeData));
+            
+            // Ask admin if they want to send notification
+            if (isAdmin) {
+                const sendNotification = confirm('Do you want to send this announcement as a notification to all users?');
+                if (sendNotification) {
+                    await sendNotificationToAll(title, text);
+                }
+            }
+            
+            alert('Notice updated successfully!' + (isAdmin ? ' (Notification sent to users)' : ''));
+        }
+        
+        // Save prayer times
+        function savePrayerTimes() {
+            // Update default prayer times from form
+            Object.keys(defaultPrayerTimes).forEach(prayerKey => {
+                defaultPrayerTimes[prayerKey].start = document.getElementById(`${prayerKey}-start`).value;
+                defaultPrayerTimes[prayerKey].azan = document.getElementById(`${prayerKey}-azan`).value;
+                defaultPrayerTimes[prayerKey].zamaat = document.getElementById(`${prayerKey}-zamaat`).value;
+                defaultPrayerTimes[prayerKey].end = document.getElementById(`${prayerKey}-end`).value;
+            });
+            
+            // Save to localStorage
+            localStorage.setItem('prayerTimes', JSON.stringify(defaultPrayerTimes));
+            localStorage.setItem('extraPrayers', JSON.stringify(extraPrayers));
+            
+            // Re-render table
+            renderPrayerTimes();
+            updatePrayerStatus();
+            
+            // Send notification if admin
+            if (isAdmin) {
+                const sendNotification = confirm('Do you want to notify users about updated prayer times?');
+                if (sendNotification) {
+                    sendNotificationToAll(
+                        'Prayer Times Updated',
+                        'Please check the updated prayer times in the app'
+                    );
+                }
+            }
+            
+            alert('Prayer times saved successfully!');
+        }
+        
+        // Add extra prayer
+        function addExtraPrayer() {
+            const name = document.getElementById('extra-prayer-name').value.trim();
+            const start = document.getElementById('extra-prayer-start').value;
+            const azan = document.getElementById('extra-prayer-azan').value;
+            const zamaat = document.getElementById('extra-prayer-zamaat').value;
+            const end = document.getElementById('extra-prayer-end').value;
+            
+            if (!name) {
+                alert('Please enter a prayer name');
+                return;
+            }
+            
+            const newPrayer = {
+                name,
+                start: start || "N/A",
+                azan: azan || "N/A",
+                zamaat: zamaat || "N/A",
+                end: end || "N/A",
+                icon: "fas fa-pray"
+            };
+            
+            if (editingExtraPrayerId !== null) {
+                // Update existing extra prayer
+                extraPrayers[editingExtraPrayerId] = newPrayer;
+                editingExtraPrayerId = null;
+                document.getElementById('add-extra-prayer-btn').innerHTML = '<i class="fas fa-save"></i> Update Prayer';
+                alert('Extra prayer updated successfully!');
+            } else {
+                // Add new extra prayer
+                extraPrayers.push(newPrayer);
+                alert('Extra prayer added successfully!');
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('extraPrayers', JSON.stringify(extraPrayers));
+            
+            // Re-render table
+            renderPrayerTimes();
+            
+            // Reload extra prayers list for admin
+            if (isAdmin) {
+                loadExtraPrayersList();
+            }
+            
+            // Clear form
+            document.getElementById('extra-prayer-name').value = '';
+            document.getElementById('extra-prayer-start').value = '';
+            document.getElementById('extra-prayer-azan').value = '';
+            document.getElementById('extra-prayer-zamaat').value = '';
+            document.getElementById('extra-prayer-end').value = '';
+        }
+        
+        // Clear all data
+        function clearAllData() {
+            if (confirm('Are you sure you want to reset all data to default? This will clear prayer times and extra prayers.')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+        
+        // Load saved data from localStorage
+        function loadData() {
+            // Load notice data
+            const noticeData = JSON.parse(localStorage.getItem('prayerNotice') || 'null');
+            if (noticeData) {
+                document.getElementById('notice-title-input').value = noticeData.title || '';
+                document.getElementById('notice-text-input').value = noticeData.text || '';
+                document.getElementById('notice-image-input').value = noticeData.imageUrl || '';
+                
+                document.getElementById('notice-title').textContent = noticeData.title || '';
+                document.getElementById('notice-text').textContent = noticeData.text || '';
+                
+                const noticeImage = document.getElementById('notice-image');
+                if (noticeData.imageUrl) {
+                    noticeImage.src = noticeData.imageUrl;
+                    noticeImage.style.display = 'block';
+                }
+            }
+            
+            // Load prayer times
+            const savedPrayerTimes = JSON.parse(localStorage.getItem('prayerTimes') || 'null');
+            if (savedPrayerTimes) {
+                Object.keys(savedPrayerTimes).forEach(key => {
+                    if (defaultPrayerTimes[key]) {
+                        defaultPrayerTimes[key] = savedPrayerTimes[key];
+                    }
+                });
+            }
+            
+            // Load extra prayers
+            const savedExtraPrayers = JSON.parse(localStorage.getItem('extraPrayers') || '[]');
+            if (savedExtraPrayers) {
+                extraPrayers = savedExtraPrayers;
+            }
+        }
+        
+        // Determine current prayer based on time
+        function getCurrentPrayer() {
+            const now = new Date();
+            const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            // Combine all prayers
+            const allPrayers = { ...defaultPrayerTimes };
+            extraPrayers.forEach((prayer, index) => {
+                allPrayers[`extra${index}`] = prayer;
+            });
+            
+            // Find the current prayer
+            let currentPrayerKey = null;
+            const nowInMinutes = convertToMinutes(currentTime);
+            
+            Object.keys(allPrayers).forEach(prayerKey => {
+                const prayer = allPrayers[prayerKey];
+                
+                // Skip prayers with "N/A" times
+                if (prayer.start === "N/A" || prayer.end === "N/A") return;
+                
+                const startTime = convertToMinutes(prayer.start);
+                const endTime = convertToMinutes(prayer.end);
+                
+                // Handle prayers that span midnight
+                if (startTime > endTime) {
+                    if (nowInMinutes >= startTime || nowInMinutes <= endTime) {
+                        currentPrayerKey = prayerKey;
+                    }
+                } else {
+                    if (nowInMinutes >= startTime && nowInMinutes <= endTime) {
+                        currentPrayerKey = prayerKey;
+                    }
+                }
+            });
+            
+            return currentPrayerKey;
+        }
+        
+        // Update prayer status in table
+        function updatePrayerStatus() {
+            const currentPrayerKey = getCurrentPrayer();
+            
+            // Remove current-prayer class from all rows
+            document.querySelectorAll('.prayer-table tr').forEach(row => {
+                row.classList.remove('current-prayer');
+            });
+            
+            // Update status cells
+            const allPrayers = { ...defaultPrayerTimes };
+            extraPrayers.forEach((prayer, index) => {
+                allPrayers[`extra${index}`] = prayer;
+            });
+            
+            Object.keys(allPrayers).forEach(prayerKey => {
+                const row = document.getElementById(`prayer-row-${prayerKey}`);
+                if (row) {
+                    const statusCell = row.querySelector('.prayer-status');
+                    
+                    if (prayerKey === currentPrayerKey) {
+                        row.classList.add('current-prayer');
+                        statusCell.textContent = 'NOW';
+                        statusCell.className = 'prayer-status status-current';
+                    } else {
+                        // Check if prayer has passed
+                        const prayer = allPrayers[prayerKey];
+                        const now = new Date();
+                        const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                        
+                        if (prayer.end !== "N/A") {
+                            const endTime = convertToMinutes(prayer.end);
+                            const nowInMinutes = convertToMinutes(currentTime);
+                            
+                            if (nowInMinutes > endTime) {
+                                statusCell.textContent = 'Passed';
+                                statusCell.className = 'prayer-status status-passed';
+                            } else {
+                                statusCell.textContent = 'Upcoming';
+                                statusCell.className = 'prayer-status status-upcoming';
+                            }
+                        } else {
+                            statusCell.textContent = 'Upcoming';
+                            statusCell.className = 'prayer-status status-upcoming';
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Helper function to convert time to minutes
+        function convertToMinutes(timeStr) {
+            if (timeStr === "N/A") return -1;
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+    </script>
+</body>
+</html>
