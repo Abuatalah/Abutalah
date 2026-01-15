@@ -2067,9 +2067,28 @@
             }
             
             try {
-                messaging = firebase.messaging();
+                // पहले Service Worker register करने का प्रयास करें
+                if ('serviceWorker' in navigator) {
+                    try {
+                        // Service Worker को register करें
+                        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                        console.log('Service Worker registered with scope:', registration.scope);
+                        
+                        // Service Worker registration successful, now initialize messaging
+                        messaging = firebase.messaging();
+                        messaging.useServiceWorker(registration);
+                        
+                    } catch (swError) {
+                        console.warn('Service Worker registration failed, using fallback:', swError);
+                        // Fallback: Service Worker के बिना ही messaging initialize करें
+                        messaging = firebase.messaging();
+                    }
+                } else {
+                    // Service Worker नहीं है, तो सीधे messaging initialize करें
+                    messaging = firebase.messaging();
+                }
                 
-                // Request permission and get token when user clicks enable - FIXED VERSION
+                // Request permission and get token when user clicks enable
                 document.getElementById('enable-notifications').addEventListener('click', async () => {
                     await getFCMTokenAndSave();
                 });
@@ -2085,7 +2104,8 @@
                     // Already granted, get token silently
                     try {
                         const token = await messaging.getToken({
-                            vapidKey: 'BIBZUJ1SN-KQ4R3XoIq-LrqW5gDX2n_HaLm_jtOqi0mpIgEjHZzZCTNHEJQWJgNqE48UhxctcW8X6JqYHMBm83o'
+                            vapidKey: 'BIBZUJ1SN-KQ4R3XoIq-LrqW5gDX2n_HaLm_jtOqi0mpIgEjHZzZCTNHEJQWJgNqE48UhxctcW8X6JqYHMBm83o',
+                            serviceWorkerRegistration: null // Service Worker को skip करें
                         });
                         
                         if (token && currentUser) {
@@ -2100,14 +2120,14 @@
                     }
                 } else if (Notification.permission === 'default' && 
                           !localStorage.getItem('notificationDenied')) {
-                    // Show permission banner after delay - FIXED VERSION
+                    // Show permission banner after delay
                     setTimeout(() => {
                         const banner = document.getElementById('notification-permission-banner');
                         if (banner && currentUser && !banner.classList.contains('shown-before')) {
                             banner.classList.remove('hidden');
                             banner.classList.add('shown-before');
                         }
-                    }, 3000); // Show after 3 seconds
+                    }, 3000);
                 }
                 
                 // Handle incoming messages when app is in foreground
@@ -2169,9 +2189,10 @@
                     messaging = firebase.messaging();
                 }
                 
-                // Get FCM token
+                // Get FCM token (Service Worker के बिना)
                 const token = await messaging.getToken({
-                    vapidKey: 'BIBZUJ1SN-KQ4R3XoIq-LrqW5gDX2n_HaLm_jtOqi0mpIgEjHZzZCTNHEJQWJgNqE48UhxctcW8X6JqYHMBm83o'
+                    vapidKey: 'BIBZUJ1SN-KQ4R3XoIq-LrqW5gDX2n_HaLm_jtOqi0mpIgEjHZzZCTNHEJQWJgNqE48UhxctcW8X6JqYHMBm83o',
+                    serviceWorkerRegistration: null // Service Worker को skip करें
                 });
                 
                 console.log('3. FCM Token received:', token ? 'YES (' + token.length + ' chars)' : 'NO');
@@ -2194,7 +2215,7 @@
                     notificationPermissionGranted: true,
                     notificationEnabledAt: new Date().toISOString(),
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true }); // merge: true means update if exists, create if not
+                }, { merge: true });
                 
                 console.log('5. Token saved successfully!');
                 
@@ -2213,10 +2234,48 @@
                     alert('Notifications are blocked by browser. Please enable them in browser settings.');
                 } else if (error.code === 'messaging/permission-default') {
                     alert('Please allow notifications when prompted.');
+                } else if (error.message.includes('service-worker')) {
+                    // Service Worker error, try without it
+                    alert('Service Worker issue. Trying alternative method...');
+                    return getFCMTokenWithoutSW();
                 } else {
                     alert('Error: ' + error.message);
                 }
                 
+                return null;
+            }
+        }
+        
+        // Get FCM Token without Service Worker
+        async function getFCMTokenWithoutSW() {
+            try {
+                console.log('Trying to get FCM token without Service Worker...');
+                
+                // Simple token request without service worker
+                const token = await messaging.getToken({
+                    vapidKey: 'BIBZUJ1SN-KQ4R3XoIq-LrqW5gDX2n_HaLm_jtOqi0mpIgEjHZzZCTNHEJQWJgNqE48UhxctcW8X6JqYHMBm83o',
+                    serviceWorkerRegistration: null
+                });
+                
+                if (token) {
+                    // Save to Firestore
+                    await db.collection('users').doc(currentUser.uid).set({
+                        fcmToken: token,
+                        notificationEnabled: true,
+                        notificationPermissionGranted: true,
+                        notificationEnabledAt: new Date().toISOString(),
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                    
+                    alert('✅ Notifications enabled successfully (without Service Worker)!');
+                    document.getElementById('notification-permission-banner').classList.add('hidden');
+                    return token;
+                }
+                
+                return null;
+            } catch (error) {
+                console.error('Error getting token without SW:', error);
+                alert('Failed to enable notifications. Please try again later.');
                 return null;
             }
         }
@@ -2504,7 +2563,7 @@
                     loadAdminTickets();
                     loadTicketStats();
                     
-                    // NOTIFICATION BANNER: Show if permission not decided yet - FIXED VERSION
+                    // NOTIFICATION BANNER: Show if permission not decided yet
                     setTimeout(() => {
                         const banner = document.getElementById('notification-permission-banner');
                         if (banner && Notification.permission === 'default' && 
