@@ -1503,7 +1503,6 @@
                 <button class="btn btn-primary" id="login-button">
                     <i class="fas fa-sign-in-alt"></i> Login
                 </button>
-                <!-- Logout button removed, now available in menu -->
             </div>
         </div>
         
@@ -1878,11 +1877,11 @@
     </div>
     
     <script>
-        // Firebase Configuration (COMPLETE VERSION - missing databaseURL added)
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA-MCpoBC-626_5JU59f98pOygaCm1RO90",
             authDomain: "abutalah-d690f.firebaseapp.com",
-            databaseURL: "https://abutalah-d690f-default-rtdb.firebaseio.com", // YEH ADD KIYA
+            databaseURL: "https://abutalah-d690f-default-rtdb.firebaseio.com",
             projectId: "abutalah-d690f",
             storageBucket: "abutalah-d690f.firebasestorage.app",
             messagingSenderId: "459877871118",
@@ -1896,7 +1895,7 @@
         const db = firebase.firestore();
         let messaging = null;
         
-        // Fixed 5 prayers only (removed Tahajjud from default)
+        // Fixed 5 prayers only
         const defaultPrayerTimes = {
             fajr: { name: "Fajr", start: "05:00", azan: "05:15", zamaat: "05:30", end: "06:00", icon: "fas fa-sun" },
             dhuhr: { name: "Dhuhr", start: "12:30", azan: "12:45", zamaat: "13:00", end: "13:30", icon: "fas fa-sun" },
@@ -1931,14 +1930,11 @@
             // Setup event listeners
             setupEventListeners();
             
-            // Setup Firebase auth state listener - FIXED VERSION
+            // Setup Firebase auth state listener
             setupAuthListener();
             
             // Setup navigation
             setupNavigation();
-            
-            // Show login first screen
-            showLoginFirstScreen();
             
             // Setup back to top button
             setupBackToTop();
@@ -2052,7 +2048,7 @@
             loadProducts();
         }
         
-        // Initialize Firebase Cloud Messaging - FIXED VERSION
+        // Initialize Firebase Cloud Messaging
         async function initializeFCM() {
             // Check if browser supports notifications
             if (!('Notification' in window)) {
@@ -2067,26 +2063,7 @@
             }
             
             try {
-                // पहले Service Worker register करने का प्रयास करें
-                if ('serviceWorker' in navigator) {
-                    try {
-                        // Service Worker को register करें
-                        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-                        console.log('Service Worker registered with scope:', registration.scope);
-                        
-                        // Service Worker registration successful, now initialize messaging
-                        messaging = firebase.messaging();
-                        messaging.useServiceWorker(registration);
-                        
-                    } catch (swError) {
-                        console.warn('Service Worker registration failed, using fallback:', swError);
-                        // Fallback: Service Worker के बिना ही messaging initialize करें
-                        messaging = firebase.messaging();
-                    }
-                } else {
-                    // Service Worker नहीं है, तो सीधे messaging initialize करें
-                    messaging = firebase.messaging();
-                }
+                messaging = firebase.messaging();
                 
                 // Request permission and get token when user clicks enable
                 document.getElementById('enable-notifications').addEventListener('click', async () => {
@@ -2104,8 +2081,7 @@
                     // Already granted, get token silently
                     try {
                         const token = await messaging.getToken({
-                            vapidKey: 'BIBZUJ1SN-KQ4R3XoIq-LrqW5gDX2n_HaLm_jtOqi0mpIgEjHZzZCTNHEJQWJgNqE48UhxctcW8X6JqYHMBm83o',
-                            serviceWorkerRegistration: null // Service Worker को skip करें
+                            vapidKey: 'BIBZUJ1SN-KQ4R3XoIq-LrqW5gDX2n_HaLm_jtOqi0mpIgEjHZzZCTNHEJQWJgNqE48UhxctcW8X6JqYHMBm83o'
                         });
                         
                         if (token && currentUser) {
@@ -2136,26 +2112,6 @@
                     
                     // Show in-app notification
                     showInAppNotification(payload);
-                    
-                    // Also show browser notification if permission granted
-                    if (Notification.permission === 'granted') {
-                        const title = payload.notification?.title || 'Masjid Abutalah';
-                        const options = {
-                            body: payload.notification?.body || 'New update',
-                            icon: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',
-                            badge: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',
-                            tag: 'masjid-notification'
-                        };
-                        
-                        // Use Service Worker if available, otherwise use Notification API
-                        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                            navigator.serviceWorker.ready.then(registration => {
-                                registration.showNotification(title, options);
-                            });
-                        } else {
-                            new Notification(title, options);
-                        }
-                    }
                 });
                 
             } catch (error) {
@@ -2163,7 +2119,7 @@
             }
         }
         
-        // Get FCM Token and Save - FIXED VERSION
+        // Get FCM Token and Save
         async function getFCMTokenAndSave() {
             if (!currentUser) {
                 alert('Please login first to enable notifications');
@@ -2171,7 +2127,7 @@
             }
             
             try {
-                console.log('1. Requesting notification permission...');
+                console.log('Requesting notification permission...');
                 
                 // Request permission
                 const permission = await Notification.requestPermission();
@@ -2182,20 +2138,14 @@
                     return null;
                 }
                 
-                console.log('2. Getting FCM token...');
+                console.log('Getting FCM token...');
                 
-                // Initialize messaging if not already done
-                if (!messaging) {
-                    messaging = firebase.messaging();
-                }
-                
-                // Get FCM token (Service Worker के बिना)
+                // Get FCM token
                 const token = await messaging.getToken({
-                    vapidKey: 'BIBZUJ1SN-KQ4R3XoIq-LrqW5gDX2n_HaLm_jtOqi0mpIgEjHZzZCTNHEJQWJgNqE48UhxctcW8X6JqYHMBm83o',
-                    serviceWorkerRegistration: null // Service Worker को skip करें
+                    vapidKey: 'BIBZUJ1SN-KQ4R3XoIq-LrqW5gDX2n_HaLm_jtOqi0mpIgEjHZzZCTNHEJQWJgNqE48UhxctcW8X6JqYHMBm83o'
                 });
                 
-                console.log('3. FCM Token received:', token ? 'YES (' + token.length + ' chars)' : 'NO');
+                console.log('FCM Token received:', token ? 'YES (' + token.length + ' chars)' : 'NO');
                 
                 if (!token) {
                     alert('Could not generate FCM token. Please try again.');
@@ -2204,10 +2154,9 @@
                 
                 // Show token info (for debugging)
                 console.log('Token first 50 chars:', token.substring(0, 50));
-                console.log('Full Token:', token);
                 
                 // Save to Firestore
-                console.log('4. Saving token to Firestore...');
+                console.log('Saving token to Firestore...');
                 
                 await db.collection('users').doc(currentUser.uid).set({
                     fcmToken: token,
@@ -2217,9 +2166,9 @@
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
                 
-                console.log('5. Token saved successfully!');
+                console.log('Token saved successfully!');
                 
-                alert(`✅ Notifications enabled successfully!\n\nYour FCM Token has been saved to database.\n\nToken (first 30 chars): ${token.substring(0, 30)}...`);
+                alert(`✅ Notifications enabled successfully!\n\nYour FCM Token has been saved to database.`);
                 
                 // Hide permission banner
                 document.getElementById('notification-permission-banner').classList.add('hidden');
@@ -2234,48 +2183,10 @@
                     alert('Notifications are blocked by browser. Please enable them in browser settings.');
                 } else if (error.code === 'messaging/permission-default') {
                     alert('Please allow notifications when prompted.');
-                } else if (error.message.includes('service-worker')) {
-                    // Service Worker error, try without it
-                    alert('Service Worker issue. Trying alternative method...');
-                    return getFCMTokenWithoutSW();
                 } else {
                     alert('Error: ' + error.message);
                 }
                 
-                return null;
-            }
-        }
-        
-        // Get FCM Token without Service Worker
-        async function getFCMTokenWithoutSW() {
-            try {
-                console.log('Trying to get FCM token without Service Worker...');
-                
-                // Simple token request without service worker
-                const token = await messaging.getToken({
-                    vapidKey: 'BIBZUJ1SN-KQ4R3XoIq-LrqW5gDX2n_HaLm_jtOqi0mpIgEjHZzZCTNHEJQWJgNqE48UhxctcW8X6JqYHMBm83o',
-                    serviceWorkerRegistration: null
-                });
-                
-                if (token) {
-                    // Save to Firestore
-                    await db.collection('users').doc(currentUser.uid).set({
-                        fcmToken: token,
-                        notificationEnabled: true,
-                        notificationPermissionGranted: true,
-                        notificationEnabledAt: new Date().toISOString(),
-                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true });
-                    
-                    alert('✅ Notifications enabled successfully (without Service Worker)!');
-                    document.getElementById('notification-permission-banner').classList.add('hidden');
-                    return token;
-                }
-                
-                return null;
-            } catch (error) {
-                console.error('Error getting token without SW:', error);
-                alert('Failed to enable notifications. Please try again later.');
                 return null;
             }
         }
@@ -2332,7 +2243,7 @@
             }, 8000);
         }
         
-        // Send notification to all users (Admin function) - NO INDEX REQUIRED VERSION
+        // Send notification to all users (Admin function)
         async function sendNotificationToAll(title, body) {
             if (!isAdmin) {
                 alert('Only admin can send notifications');
@@ -2340,36 +2251,18 @@
             }
             
             try {
-                // Get ALL users first (NO WHERE CLAUSE - NO INDEX NEEDED)
-                console.log('Fetching all users...');
-                const usersSnapshot = await db.collection('users').get();
+                // Get all users with notifications enabled
+                const usersSnapshot = await db.collection('users')
+                    .where('notificationEnabled', '==', true)
+                    .where('fcmToken', '!=', '')
+                    .get();
                 
                 if (usersSnapshot.empty) {
-                    alert('No users found in database.');
-                    return;
-                }
-                
-                console.log('Total users found:', usersSnapshot.size);
-                
-                // Filter in JavaScript (not in Firestore query)
-                const tokens = [];
-                usersSnapshot.forEach(doc => {
-                    const userData = doc.data();
-                    // Check both conditions in JavaScript
-                    if (userData.notificationEnabled === true && 
-                        userData.fcmToken && 
-                        userData.fcmToken.trim() !== '') {
-                        tokens.push(userData.fcmToken);
-                        console.log('User with token:', userData.email || userData.name || 'Unknown');
-                    }
-                });
-                
-                if (tokens.length === 0) {
                     alert('No users have enabled notifications yet.');
                     return;
                 }
                 
-                console.log('Users with tokens:', tokens.length);
+                console.log('Users with notifications:', usersSnapshot.size);
                 
                 // Save notification record
                 const notificationRef = await db.collection('notifications').add({
@@ -2378,23 +2271,16 @@
                     sentBy: currentUser.uid,
                     sentByEmail: currentUser.email,
                     sentAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    recipientCount: tokens.length
+                    recipientCount: usersSnapshot.size
                 });
                 
-                alert(`✅ Notification "${title}" will be sent to ${tokens.length} users!\n\nMessage: ${body}\n\nNote: This is a demo. In production, you would use Cloud Functions to send actual push notifications.`);
+                alert(`✅ Notification "${title}" will be sent to ${usersSnapshot.size} users!\n\nMessage: ${body}\n\nNote: This is a demo. In production, you would use Cloud Functions to send actual push notifications.`);
                 
-                return tokens.length;
+                return usersSnapshot.size;
                 
             } catch (error) {
                 console.error('Error sending notification:', error);
-                
-                // More user-friendly error message
-                if (error.message.includes('index')) {
-                    alert('Firestore index error. Using fallback method. Notification saved but not sent to users.');
-                } else {
-                    alert('Error: ' + error.message);
-                }
-                
+                alert('Error: ' + error.message);
                 return 0;
             }
         }
@@ -2407,7 +2293,6 @@
             }
             
             try {
-                console.log('Fetching all users...');
                 const usersSnapshot = await db.collection('users').get();
                 
                 if (usersSnapshot.empty) {
@@ -2425,11 +2310,9 @@
                 
                 usersSnapshot.forEach(doc => {
                     const userData = doc.data();
-                    const userId = doc.id;
                     
                     report += `👤 User: ${userData.name || userData.email || 'Unknown'}\n`;
                     report += `   Email: ${userData.email || 'N/A'}\n`;
-                    report += `   User ID: ${userId.substring(0, 8)}...\n`;
                     
                     if (userData.fcmToken) {
                         usersWithToken++;
@@ -2450,11 +2333,10 @@
                 report += `Users with FCM Token: ${usersWithToken}\n`;
                 report += `Users without FCM Token: ${usersWithoutToken}\n`;
                 
-                // Display in alert (might be too large, so also log to console)
+                // Display in alert
                 console.log(report);
                 
                 if (usersWithToken > 0) {
-                    // Show summary in alert
                     alert(`📊 FCM Tokens Found:\n\nTotal Users: ${usersSnapshot.size}\nWith Token: ${usersWithToken}\nWithout Token: ${usersWithoutToken}\n\nCheck browser console (F12) for detailed report.`);
                 } else {
                     alert('❌ No users have FCM tokens yet. Users need to enable notifications.');
@@ -2485,7 +2367,7 @@
             }
         }
         
-        // Firebase Auth State Listener - COMPLETELY FIXED VERSION
+        // Firebase Auth State Listener
         function setupAuthListener() {
             auth.onAuthStateChanged(async (user) => {
                 currentUser = user;
@@ -2504,7 +2386,7 @@
                     document.getElementById('profile-name').textContent = displayName;
                     document.getElementById('profile-email').textContent = user.email;
                     
-                    // IMPORTANT: Check if user exists in Firestore, create if not
+                    // Check if user exists in Firestore, create if not
                     try {
                         const userDoc = await db.collection('users').doc(user.uid).get();
                         
@@ -2550,7 +2432,6 @@
                         
                     } catch (error) {
                         console.error('Error accessing Firestore:', error);
-                        // Firestore error par bhi user ko login rehne do
                         alert('Database connection issue, but you can continue using the app.');
                     }
                     
@@ -2563,7 +2444,7 @@
                     loadAdminTickets();
                     loadTicketStats();
                     
-                    // NOTIFICATION BANNER: Show if permission not decided yet
+                    // Show notification banner if permission not decided yet
                     setTimeout(() => {
                         const banner = document.getElementById('notification-permission-banner');
                         if (banner && Notification.permission === 'default' && 
@@ -2614,7 +2495,7 @@
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     
-                    if (!currentUser) {
+                    if (!currentUser && this.getAttribute('data-page') !== 'home') {
                         document.getElementById('auth-modal').classList.add('active');
                         return;
                     }
@@ -2991,7 +2872,7 @@
             }
         }
         
-        // Register new user - FIXED VERSION
+        // Register new user
         async function registerUser() {
             const name = document.getElementById('signup-name').value.trim();
             const email = document.getElementById('signup-email').value.trim();
@@ -3034,7 +2915,7 @@
                     displayName: name
                 });
                 
-                // Save user to Firestore - AUTO CREATE USER DOCUMENT
+                // Save user to Firestore
                 await db.collection('users').doc(userCredential.user.uid).set({
                     email: email,
                     name: name,
@@ -3043,7 +2924,6 @@
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
-                // Auto-login successful
                 alert('Registration successful! Welcome to Masjid Abutalah.');
                 
             } catch (error) {
@@ -3052,7 +2932,7 @@
             }
         }
         
-        // Submit ticket - NO INDEX REQUIRED VERSION
+        // Submit ticket
         async function submitTicket(e) {
             e.preventDefault();
             
@@ -3082,31 +2962,22 @@
                 return;
             }
             
-            // Get ALL tickets and filter in JavaScript (NO INDEX NEEDED)
+            // Count today's tickets for this user
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const todayTicketsSnapshot = await db.collection('tickets')
+                .where('userId', '==', currentUser.uid)
+                .where('createdAt', '>=', today)
+                .get();
+            
+            if (todayTicketsSnapshot.size >= 3) {
+                errorDiv.querySelector('span').textContent = 'You have already created 3 tickets today. Please try again tomorrow.';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
             try {
-                const allTicketsSnapshot = await db.collection('tickets').get();
-                
-                // Count today's tickets for this user in JavaScript
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                
-                let todayTicketsCount = 0;
-                allTicketsSnapshot.forEach(doc => {
-                    const ticket = doc.data();
-                    if (ticket.userId === currentUser.uid && ticket.createdAt) {
-                        const ticketDate = ticket.createdAt.toDate();
-                        if (ticketDate >= today) {
-                            todayTicketsCount++;
-                        }
-                    }
-                });
-                
-                if (todayTicketsCount >= 3) {
-                    errorDiv.querySelector('span').textContent = 'You have already created 3 tickets today. Please try again tomorrow.';
-                    errorDiv.classList.remove('hidden');
-                    return;
-                }
-                
                 // Create ticket
                 const ticketRef = await db.collection('tickets').add({
                     userId: currentUser.uid,
@@ -3125,7 +2996,7 @@
                 // Show success message
                 const ticketInfo = document.getElementById('ticket-info');
                 ticketInfo.className = 'alert alert-success';
-                ticketInfo.innerHTML = `<i class="fas fa-check-circle"></i> Ticket submitted successfully! Ticket ID: ${ticketRef.id.substring(0, 8)}. Today you have created <span id="tickets-today">${todayTicketsCount + 1}</span> ticket(s).`;
+                ticketInfo.innerHTML = `<i class="fas fa-check-circle"></i> Ticket submitted successfully! Ticket ID: ${ticketRef.id.substring(0, 8)}. Today you have created <span id="tickets-today">${todayTicketsSnapshot.size + 1}</span> ticket(s).`;
                 
                 // Reload tickets
                 loadUserTickets();
@@ -3140,7 +3011,7 @@
             }
         }
         
-        // Load user tickets - NO INDEX REQUIRED VERSION
+        // Load user tickets
         async function loadUserTickets() {
             if (!currentUser) return;
             
@@ -3148,41 +3019,20 @@
             ticketsContainer.innerHTML = '<div class="spinner"></div>';
             
             try {
-                // Get ALL tickets (NO WHERE CLAUSE - NO INDEX NEEDED)
-                const snapshot = await db.collection('tickets').get();
+                const snapshot = await db.collection('tickets')
+                    .where('userId', '==', currentUser.uid)
+                    .orderBy('createdAt', 'desc')
+                    .limit(50)
+                    .get();
                 
                 if (snapshot.empty) {
                     ticketsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No tickets found.</p>';
                     return;
                 }
                 
-                // Filter by current user in JavaScript
-                const userTickets = [];
+                let html = '';
                 snapshot.forEach(doc => {
                     const ticket = doc.data();
-                    if (ticket.userId === currentUser.uid) {
-                        userTickets.push({
-                            id: doc.id,
-                            ...ticket
-                        });
-                    }
-                });
-                
-                // Sort by date (newest first)
-                userTickets.sort((a, b) => {
-                    const dateA = a.createdAt ? a.createdAt.toDate() : new Date(0);
-                    const dateB = b.createdAt ? b.createdAt.toDate() : new Date(0);
-                    return dateB - dateA;
-                });
-                
-                if (userTickets.length === 0) {
-                    ticketsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No tickets found.</p>';
-                    return;
-                }
-                
-                // Display tickets
-                let html = '';
-                userTickets.forEach(ticket => {
                     const date = ticket.createdAt ? ticket.createdAt.toDate().toLocaleDateString() : 'N/A';
                     const time = ticket.createdAt ? ticket.createdAt.toDate().toLocaleTimeString() : '';
                     
@@ -3220,7 +3070,7 @@
             try {
                 const snapshot = await db.collection('tickets')
                     .orderBy('createdAt', 'desc')
-                    .limit(50) // Limit to 50 tickets
+                    .limit(50)
                     .get();
                 
                 if (snapshot.empty) {
@@ -3291,42 +3141,31 @@
             }
         }
         
-        // Load ticket statistics - NO INDEX REQUIRED VERSION
+        // Load ticket statistics
         async function loadTicketStats() {
             if (!currentUser) return;
             
             try {
-                // Get ALL tickets
-                const allTicketsSnapshot = await db.collection('tickets').get();
+                const totalSnapshot = await db.collection('tickets')
+                    .where('userId', '==', currentUser.uid)
+                    .get();
                 
-                let totalTickets = 0;
-                let resolvedTickets = 0;
-                let todayTickets = 0;
+                const resolvedSnapshot = await db.collection('tickets')
+                    .where('userId', '==', currentUser.uid)
+                    .where('status', '==', 'resolved')
+                    .get();
                 
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 
-                allTicketsSnapshot.forEach(doc => {
-                    const ticket = doc.data();
-                    if (ticket.userId === currentUser.uid) {
-                        totalTickets++;
-                        
-                        if (ticket.status === 'resolved') {
-                            resolvedTickets++;
-                        }
-                        
-                        if (ticket.createdAt) {
-                            const ticketDate = ticket.createdAt.toDate();
-                            if (ticketDate >= today) {
-                                todayTickets++;
-                            }
-                        }
-                    }
-                });
+                const todayTicketsSnapshot = await db.collection('tickets')
+                    .where('userId', '==', currentUser.uid)
+                    .where('createdAt', '>=', today)
+                    .get();
                 
-                document.getElementById('total-tickets').textContent = totalTickets;
-                document.getElementById('resolved-tickets').textContent = resolvedTickets;
-                document.getElementById('tickets-today').textContent = todayTickets;
+                document.getElementById('total-tickets').textContent = totalSnapshot.size;
+                document.getElementById('resolved-tickets').textContent = resolvedSnapshot.size;
+                document.getElementById('tickets-today').textContent = todayTicketsSnapshot.size;
                 
             } catch (error) {
                 console.error('Error loading ticket stats:', error);
@@ -3371,7 +3210,6 @@
                 `<img src="${product.imageUrl}" alt="${product.name}" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\\'fas fa-box-open\\' style=\\'font-size: 48px; color: #ccc;\\'></i>';">` :
                 `<i class="fas fa-box-open" style="font-size: 48px; color: #ccc;"></i>`;
             
-            // Safe escaping for product data
             const safeName = product.name ? product.name.replace(/'/g, "\\'").replace(/"/g, '\\"') : '';
             const safeDescription = product.description ? product.description.replace(/'/g, "\\'").replace(/"/g, '\\"') : '';
             const safeImageUrl = (product.imageUrl || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
@@ -3467,13 +3305,12 @@
                 
                 // Add image URL if provided
                 if (imageUrl) {
-                    // Validate URL format
                     try {
                         new URL(imageUrl);
                         productData.imageUrl = imageUrl;
                     } catch (urlError) {
                         console.warn('Invalid image URL:', urlError);
-                        productData.imageUrl = ''; // Set empty if invalid
+                        productData.imageUrl = '';
                     }
                 } else {
                     productData.imageUrl = '';
@@ -3571,7 +3408,7 @@
             const noticeImage = document.getElementById('notice-image');
             if (imageUrl && imageUrl.trim() !== '') {
                 try {
-                    new URL(imageUrl); // Validate URL
+                    new URL(imageUrl);
                     noticeImage.src = imageUrl;
                     noticeImage.style.display = 'block';
                     noticeImage.onerror = function() {
