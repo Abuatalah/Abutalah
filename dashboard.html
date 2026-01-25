@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | SMS Panel</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <!-- Dashboard Layout -->
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-sms"></i>
+                    <span>SMS<span class="highlight">Panel</span></span>
+                </div>
+            </div>
+            
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-details">
+                    <h4 class="user-name">Loading...</h4>
+                    <p class="user-email">user@example.com</p>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="active">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="#">
+                    <i class="fas fa-paper-plane"></i> Send SMS
+                </a>
+                <a href="#">
+                    <i class="fas fa-id-card"></i> Sender IDs
+                </a>
+                <a href="#">
+                    <i class="fas fa-chart-bar"></i> Reports
+                </a>
+                <a href="#">
+                    <i class="fas fa-file-invoice-dollar"></i> Transactions
+                </a>
+                <a href="#">
+                    <i class="fas fa-code"></i> API
+                </a>
+                <a href="#">
+                    <i class="fas fa-wallet"></i> Balance
+                </a>
+                <a href="#">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+                <a href="#" onclick="signOut()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </nav>
+            
+            <div class="balance-card">
+                <h5>Available Balance</h5>
+                <h3 class="balance-amount">₹ <span id="balance">0</span></h3>
+                <button class="btn-add-balance">
+                    <i class="fas fa-plus"></i> Add Balance
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search messages, reports...">
+                </div>
+                <div class="top-bar-actions">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                    <button class="quick-sms-btn" onclick="openQuickSMS()">
+                        <i class="fas fa-plus"></i> Quick SMS
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <h1>Welcome, <span class="user-name">User</span></h1>
+                <p class="subtitle">Here's your SMS panel overview</p>
+                
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #3b82f6;">
+                            <i class="fas fa-paper-plane"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalSms">0</h3>
+                            <p>Total SMS Sent</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #10b981;">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="deliveredSms">0</h3>
+                            <p>Delivered</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #f59e0b;">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="pendingSms">0</h3>
+                            <p>Pending</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #ef4444;">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="failedSms">0</h3>
+                            <p>Failed</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h2>Quick Actions</h2>
+                    <div class="actions-grid">
+                        <button class="action-btn" onclick="openSendSMS()">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Send SMS</span>
+                        </button>
+                        <button class="action-btn">
+                            <i class="fas fa-id-card"></i>
+                            <span>Add Sender ID</span>
+                        </button>
+                        <button class="action-btn">
+                            <i class="fas fa-file-export"></i>
+                            <span>Export Reports</span>
+                        </button>
+                        <button class="action-btn">
+                            <i class="fas fa-code"></i>
+                            <span>API Docs</span>
+                        </button>
+                        <button class="action-btn">
+                            <i class="fas fa-wallet"></i>
+                            <span>Add Balance</span>
+                        </button>
+                        <button class="action-btn">
+                            <i class="fas fa-users"></i>
+                            <span>Add Contacts</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="recent-activity">
+                    <h2>Recent Messages</h2>
+                    <div class="activity-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>To</th>
+                                    <th>Message</th>
+                                    <th>Status</th>
+                                    <th>Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody id="smsTableBody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center;">Loading recent messages...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick SMS Modal -->
+    <div id="quickSMSModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Send Quick SMS</h3>
+                <button class="modal-close" onclick="closeQuickSMS()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Mobile Number</label>
+                    <input type="text" id="quickNumber" placeholder="9876543210" maxlength="10">
+                </div>
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea id="quickMessage" rows="3" placeholder="Type your message here..." maxlength="160"></textarea>
+                    <small style="float: right;" id="charCount">0/160</small>
+                </div>
+                <button class="btn-primary" onclick="sendQuickSMS()">Send SMS</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard CSS -->
+    <style>
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: #1f2937;
+            color: white;
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        
+        .sidebar-header {
+            padding-bottom: 20px;
+            border-bottom: 1px solid #374151;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #374151;
+        }
+        
+        .user-avatar {
+            font-size: 40px;
+            margin-right: 15px;
+            color: #9ca3af;
+        }
+        
+        .user-details h4 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .user-details p {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        
+        .sidebar-nav {
+            margin: 20px 0;
+        }
+        
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: #d1d5db;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-nav a i {
+            width: 20px;
+            margin-right: 10px;
+        }
+        
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: #374151;
+            color: white;
+        }
+        
+        .balance-card {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .balance-card h5 {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .balance-amount {
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+        
+        .btn-add-balance {
+            width: 100%;
+            padding: 10px;
+            background: white;
+            color: #3b82f6;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-add-balance:hover {
+            background: #f3f4f6;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            background: #f9fafb;
+        }
+        
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #f3f4f6;
+            padding: 10px 15px;
+            border-radius: 8px;
+            width: 300px;
+        }
+        
+        .search-box input {
+            border: none;
+            background: none;
+            margin-left: 10px;
+            width: 100%;
+            outline: none;
+        }
+        
+        .top-bar-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .notification-btn {
+            position: relative;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #6b7280;
+            cursor: pointer;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 12px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .quick-sms-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .dashboard-content {
+            padding: 30px;
+        }
+        
+        .dashboard-content h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+        }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-right: 15px;
+        }
+        
+        .stat-info h3 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-info p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .quick-actions {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .quick-actions h2 {
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .action-btn {
+            background: #f3f4f6;
+            border: none;
+            padding: 20px 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+        
+        .action-btn i {
+            font-size: 24px;
+            color: #3b82f6;
+        }
+        
+        .action-btn span {
+            font-weight: 500;
+        }
+        
+        .recent-activity {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .recent-activity h2 {
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        
+        .activity-table {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+                padding: 10px;
+            }
+            
+            .sidebar .logo span,
+            .user-details,
+            .sidebar-nav a span,
+            .balance-card h5,
+            .balance-amount,
+            .btn-add-balance span {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .actions-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script>
+        // Dashboard functionality
+        let userData = null;
+        
+        async function loadDashboardData() {
+            const user = auth.currentUser;
+            if (!user) return;
+            
+            try {
+                // Load user data from Firestore
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (userDoc.exists) {
+                    userData = userDoc.data();
+                    
+                    // Update UI
+                    document.getElementById('balance').textContent = userData.balance || '0';
+                    
+                    // Load SMS stats (sample data - replace with actual data)
+                    document.getElementById('totalSms').textContent = '1,250';
+                    document.getElementById('deliveredSms').textContent = '1,200';
+                    document.getElementById('pendingSms').textContent = '30';
+                    document.getElementById('failedSms').textContent = '20';
+                    
+                    // Load recent messages
+                    loadRecentMessages();
+                }
+            } catch (error) {
+                console.error("Error loading dashboard data:", error);
+            }
+        }
+        
+        function loadRecentMessages() {
+            const tableBody = document.getElementById('smsTableBody');
+            const sampleData = [
+                { date: '2024-01-15 10:30', to: '9876543210', message: 'Your OTP is 123456', status: 'Delivered', cost: '₹0.18' },
+                { date: '2024-01-15 09:45', to: '9876543211', message: 'Welcome to our service!', status: 'Delivered', cost: '₹0.18' },
+                { date: '2024-01-14 16:20', to: '9876543212', message: 'Payment successful', status: 'Pending', cost: '₹0.18' },
+                { date: '2024-01-14 14:15', to: '9876543213', message: 'Order shipped', status: 'Failed', cost: '₹0.18' },
+                { date: '2024-01-13 11:00', to: '9876543214', message: 'Your appointment reminder', status: 'Delivered', cost: '₹0.18' }
+            ];
+            
+            tableBody.innerHTML = '';
+            sampleData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.date}</td>
+                    <td>${item.to}</td>
+                    <td>${item.message.substring(0, 30)}${item.message.length > 30 ? '...' : ''}</td>
+                    <td><span class="status-${item.status.toLowerCase()}">${item.status}</span></td>
+                    <td>${item.cost}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function openQuickSMS() {
+            document.getElementById('quickSMSModal').style.display = 'flex';
+        }
+        
+        function closeQuickSMS() {
+            document.getElementById('quickSMSModal').style.display = 'none';
+        }
+        
+        function sendQuickSMS() {
+            const number = document.getElementById('quickNumber').value;
+            const message = document.getElementById('quickMessage').value;
+            
+            if (!number || !message) {
+                showMessage('Please enter both number and message', 'error');
+                return;
+            }
+            
+            if (number.length !== 10) {
+                showMessage('Please enter a valid 10-digit mobile number', 'error');
+                return;
+            }
+            
+            // Here you would integrate with your SMS API
+            showMessage('SMS sent successfully!', 'success');
+            closeQuickSMS();
+            
+            // Clear form
+            document.getElementById('quickNumber').value = '';
+            document.getElementById('quickMessage').value = '';
+        }
+        
+        function openSendSMS() {
+            window.location.href = 'send-sms.html'; // Create this page later
+        }
+        
+        // Character count for quick SMS
+        document.getElementById('quickMessage').addEventListener('input', function() {
+            document.getElementById('charCount').textContent = `${this.value.length}/160`;
+        });
+        
+        // Initialize dashboard
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                loadDashboardData();
+            }
+        });
+    </script>
+</body>
+</html>
