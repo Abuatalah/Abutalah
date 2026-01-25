@@ -3,796 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtual OTP Receiver - Get OTP Online</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>SMS Panel | Virtual SMS Provider</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
-    
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    
-    <!-- QR Code Library -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loader">
-            <div class="spinner"></div>
-            <h2>Loading OTPReceiver</h2>
-            <p>Please wait...</p>
-        </div>
-    </div>
-
-    <!-- Mobile Menu Toggle -->
-    <div class="mobile-menu-toggle" id="mobileMenuToggle">
-        <i class="fas fa-bars"></i>
-    </div>
-
-    <!-- Header -->
-    <header class="header">
+    <!-- Navigation -->
+    <nav class="navbar">
         <div class="container">
-            <nav class="navbar">
-                <div class="logo">
-                    <i class="fas fa-sms"></i>
-                    <span>OTPReceiver</span>
-                </div>
-                
-                <div class="nav-menu" id="navMenu">
-                    <a href="#home" class="nav-link active">
-                        <i class="fas fa-home"></i> Home
-                    </a>
-                    <a href="#buy" class="nav-link">
-                        <i class="fas fa-phone"></i> Buy Number
-                    </a>
-                    <a href="#inbox" class="nav-link">
-                        <i class="fas fa-inbox"></i> Inbox
-                    </a>
-                    <a href="#funds" class="nav-link">
-                        <i class="fas fa-wallet"></i> Add Funds
-                    </a>
-                    <a href="#orders" class="nav-link">
-                        <i class="fas fa-shopping-cart"></i> Orders
-                    </a>
-                    <a href="#support" class="nav-link">
-                        <i class="fas fa-headset"></i> Support
-                    </a>
-                </div>
-                
-                <div class="user-section" id="userSection">
-                    <div class="auth-buttons" id="authButtons">
-                        <button class="btn-login" id="loginBtn">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                        </button>
-                        <button class="btn-signup" id="signupBtn">
-                            <i class="fas fa-user-plus"></i> Sign Up
-                        </button>
-                    </div>
-                    
-                    <div class="logged-in-user" id="loggedInUser" style="display: none;">
-                        <div class="user-profile" id="userProfile">
-                            <div class="user-avatar" id="userAvatar">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div class="user-info">
-                                <span class="user-name" id="userName">User</span>
-                                <span class="user-balance">₹<span id="headerBalance">0</span></span>
-                            </div>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        
-                        <div class="user-dropdown" id="userDropdown">
-                            <a href="#profile" class="dropdown-item">
-                                <i class="fas fa-user-circle"></i> Profile
-                            </a>
-                            <a href="#transactions" class="dropdown-item">
-                                <i class="fas fa-history"></i> Transactions
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <button class="dropdown-item logout-btn" id="logoutBtn">
-                                <i class="fas fa-sign-out-alt"></i> Logout
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-        </div>
-    </header>
-
-    <!-- Login/Signup Modal -->
-    <div class="modal" id="authModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>
-                    <i class="fas fa-user" id="authModalIcon"></i>
-                    <span id="authModalTitle">Login</span>
-                </h3>
-                <button class="close-modal">&times;</button>
+            <div class="logo">
+                <i class="fas fa-sms"></i>
+                <span>SMS<span class="highlight">Panel</span></span>
             </div>
-            <div class="modal-body">
-                <div class="auth-tabs">
-                    <button class="auth-tab active" data-tab="login">Login</button>
-                    <button class="auth-tab" data-tab="signup">Sign Up</button>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#api">API</a>
+                <a href="#contact">Contact</a>
+            </div>
+            <div class="auth-buttons">
+                <a href="login.html" class="btn-login">Login</a>
+                <a href="signup.html" class="btn-signup">Sign Up Free</a>
+            </div>
+            <button class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Powerful SMS & OTP Platform</h1>
+                <p>Send SMS, OTP, Promotional messages with 99% delivery rate. Complete API support for developers.</p>
+                <div class="hero-buttons">
+                    <a href="signup.html" class="btn-primary">Start Free Trial</a>
+                    <a href="#demo" class="btn-secondary">View Demo <i class="fas fa-play-circle"></i></a>
                 </div>
-                
-                <form id="loginForm" class="auth-form active">
-                    <div class="form-group">
-                        <label for="loginEmail">
-                            <i class="fas fa-envelope"></i> Email
-                        </label>
-                        <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <h3>10M+</h3>
+                        <p>SMS Sent</p>
                     </div>
-                    <div class="form-group">
-                        <label for="loginPassword">
-                            <i class="fas fa-lock"></i> Password
-                        </label>
-                        <input type="password" id="loginPassword" placeholder="Enter your password" required>
-                        <button type="button" class="show-password" id="showLoginPassword">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                    <div class="stat">
+                        <h3>99.5%</h3>
+                        <p>Delivery Rate</p>
                     </div>
-                    <button type="submit" class="btn-primary btn-block" id="loginSubmit">
-                        <i class="fas fa-sign-in-alt"></i> Login
-                    </button>
-                    
-                    <div class="auth-divider">
-                        <span>OR</span>
+                    <div class="stat">
+                        <h3>2K+</h3>
+                        <p>Happy Clients</p>
                     </div>
-                    
-                    <button type="button" class="btn-google" id="googleLoginBtn">
-                        <i class="fab fa-google"></i> Continue with Google
-                    </button>
-                    
-                    <div class="auth-footer">
-                        <p>Don't have an account? <a href="#" class="switch-to-signup">Sign up</a></p>
-                        <p><a href="#" class="forgot-password">Forgot password?</a></p>
+                    <div class="stat">
+                        <h3>24/7</h3>
+                        <p>Support</p>
                     </div>
-                </form>
-                
-                <form id="signupForm" class="auth-form">
-                    <div class="form-group">
-                        <label for="signupName">
-                            <i class="fas fa-user"></i> Full Name
-                        </label>
-                        <input type="text" id="signupName" placeholder="Enter your full name" required>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="https://cdn-icons-png.flaticon.com/512/3050/3050520.png" alt="SMS Dashboard">
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Why Choose Our SMS Platform</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
                     </div>
-                    <div class="form-group">
-                        <label for="signupEmail">
-                            <i class="fas fa-envelope"></i> Email
-                        </label>
-                        <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                    <h3>Instant Delivery</h3>
+                    <p>99% messages delivered within 3 seconds. High-speed gateway with multiple routes.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
                     </div>
-                    <div class="form-group">
-                        <label for="signupPassword">
-                            <i class="fas fa-lock"></i> Password
-                        </label>
-                        <input type="password" id="signupPassword" placeholder="Create password (min 6 chars)" required minlength="6">
-                        <button type="button" class="show-password" id="showSignupPassword">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                    <h3>Secure & Reliable</h3>
+                    <p>Bank-level security with SSL encryption. 99.9% uptime guarantee.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-code"></i>
                     </div>
-                    <div class="form-group">
-                        <label for="confirmPassword">
-                            <i class="fas fa-lock"></i> Confirm Password
-                        </label>
-                        <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+                    <h3>Easy API</h3>
+                    <p>Simple REST API with documentation in PHP, Python, Node.js, Java.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
                     </div>
-                    <button type="submit" class="btn-primary btn-block" id="signupSubmit">
-                        <i class="fas fa-user-plus"></i> Create Account
-                    </button>
-                    
-                    <div class="auth-divider">
-                        <span>OR</span>
+                    <h3>Real-time Reports</h3>
+                    <p>Detailed analytics, delivery reports, and SMS logs with export options.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-wallet"></i>
                     </div>
-                    
-                    <button type="button" class="btn-google" id="googleSignupBtn">
-                        <i class="fab fa-google"></i> Sign up with Google
-                    </button>
-                    
-                    <div class="auth-footer">
-                        <p>Already have an account? <a href="#" class="switch-to-login">Login</a></p>
+                    <h3>Lowest Pricing</h3>
+                    <p>Starting at ₹0.12/SMS. Bulk discounts and special corporate rates.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-headset"></i>
                     </div>
-                </form>
-                
-                <div class="auth-loading" id="authLoading">
-                    <div class="spinner"></div>
-                    <p>Processing...</p>
+                    <h3>24/7 Support</h3>
+                    <p>Phone, email, and live chat support. Dedicated account manager.</p>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Welcome/Hero Section -->
-        <section class="hero-section" id="home">
-            <div class="container">
-                <div class="hero-content">
-                    <h1 class="hero-title">
-                        <i class="fas fa-sms"></i>
-                        Get Virtual OTP Numbers Instantly
-                    </h1>
-                    <p class="hero-subtitle">
-                        Receive OTPs for WhatsApp, Telegram, Google, Facebook and 100+ services.
-                        Fast, secure and reliable service.
-                    </p>
-                    
-                    <div class="hero-stats">
-                        <div class="stat-item">
-                            <i class="fas fa-bolt"></i>
-                            <span>Instant Activation</span>
-                        </div>
-                        <div class="stat-item">
-                            <i class="fas fa-shield-alt"></i>
-                            <span>100% Secure</span>
-                        </div>
-                        <div class="stat-item">
-                            <i class="fas fa-headset"></i>
-                            <span>24/7 Support</span>
-                        </div>
-                    </div>
-                    
-                    <div class="hero-actions">
-                        <button class="btn-primary btn-lg" id="heroBuyNumber">
-                            <i class="fas fa-phone"></i> Buy Number Now
-                        </button>
-                        <button class="btn-secondary btn-lg" id="heroHowItWorks">
-                            <i class="fas fa-play-circle"></i> How It Works
-                        </button>
-                    </div>
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <h2 class="section-title">Simple, Transparent Pricing</h2>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Starter</h3>
+                    <div class="price">₹0.18<span>/SMS</span></div>
+                    <ul>
+                        <li><i class="fas fa-check"></i> 100 Free SMS</li>
+                        <li><i class="fas fa-check"></i> Transactional Route</li>
+                        <li><i class="fas fa-check"></i> Basic Reports</li>
+                        <li><i class="fas fa-check"></i> Email Support</li>
+                    </ul>
+                    <a href="signup.html" class="btn-outline">Get Started</a>
                 </div>
-                
-                <div class="hero-image">
-                    <div class="phone-mockup">
-                        <div class="phone-screen">
-                            <div class="otp-notification">
-                                <div class="notification-header">
-                                    <i class="fab fa-whatsapp"></i>
-                                    <span>WhatsApp</span>
-                                    <span class="notification-time">Just now</span>
-                                </div>
-                                <div class="notification-body">
-                                    <p>Your WhatsApp verification code is:</p>
-                                    <div class="otp-display">123456</div>
-                                    <button class="btn-copy-small">
-                                        <i class="fas fa-copy"></i> Copy
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="pricing-card popular">
+                    <div class="popular-badge">MOST POPULAR</div>
+                    <h3>Business</h3>
+                    <div class="price">₹0.14<span>/SMS</span></div>
+                    <ul>
+                        <li><i class="fas fa-check"></i> 1000 Free SMS</li>
+                        <li><i class="fas fa-check"></i> Promotional + DND</li>
+                        <li><i class="fas fa-check"></i> Advanced Reports</li>
+                        <li><i class="fas fa-check"></i> API Access</li>
+                        <li><i class="fas fa-check"></i> Priority Support</li>
+                    </ul>
+                    <a href="signup.html" class="btn-primary">Choose Plan</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>Enterprise</h3>
+                    <div class="price">₹0.10<span>/SMS</span></div>
+                    <ul>
+                        <li><i class="fas fa-check"></i> 10,000 Free SMS</li>
+                        <li><i class="fas fa-check"></i> All Routes</li>
+                        <li><i class="fas fa-check"></i> Custom Sender ID</li>
+                        <li><i class="fas fa-check"></i> Dedicated Manager</li>
+                        <li><i class="fas fa-check"></i> White Label</li>
+                        <li><i class="fas fa-check"></i> 24/7 Phone Support</li>
+                    </ul>
+                    <a href="#contact" class="btn-outline">Contact Sales</a>
                 </div>
             </div>
-        </section>
-
-        <!-- Dashboard Stats -->
-        <section class="stats-section" id="stats">
-            <div class="container">
-                <h2 class="section-title">
-                    <i class="fas fa-chart-line"></i>
-                    Dashboard
-                </h2>
-                
-                <div class="stats-grid" id="statsGrid">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-wallet"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="balanceAmount">₹0</h3>
-                            <p>Available Balance</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-phone"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="activeNumbersCount">0</h3>
-                            <p>Active Numbers</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-sms"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="otpsReceived">0</h3>
-                            <p>OTPs Received</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-shopping-cart"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="totalOrders">0</h3>
-                            <p>Total Orders</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Buy Number Section -->
-        <section class="buy-section" id="buy">
-            <div class="container">
-                <h2 class="section-title">
-                    <i class="fas fa-sim-card"></i>
-                    Buy Virtual Number
-                </h2>
-                
-                <div class="buy-container">
-                    <div class="service-filters">
-                        <div class="filter-group">
-                            <label for="countrySelect">
-                                <i class="fas fa-globe"></i> Country
-                            </label>
-                            <select id="countrySelect" class="form-select">
-                                <option value="">Select Country</option>
-                                <option value="6" selected>India</option>
-                                <option value="1">USA</option>
-                                <option value="7">Russia</option>
-                                <option value="44">UK</option>
-                            </select>
-                        </div>
-                        
-                        <div class="filter-group">
-                            <label for="operatorSelect">
-                                <i class="fas fa-bolt"></i> Operator
-                            </label>
-                            <select id="operatorSelect" class="form-select">
-                                <option value="">Any Operator</option>
-                                <option value="jio">Jio</option>
-                                <option value="airtel">Airtel</option>
-                                <option value="vi">Vi</option>
-                                <option value="bsnl">BSNL</option>
-                            </select>
-                        </div>
-                        
-                        <div class="filter-group">
-                            <label for="serviceSelect">
-                                <i class="fas fa-bullseye"></i> Service
-                            </label>
-                            <select id="serviceSelect" class="form-select">
-                                <option value="">Select Service</option>
-                                <option value="whatsapp">WhatsApp</option>
-                                <option value="telegram">Telegram</option>
-                                <option value="google">Google</option>
-                                <option value="facebook">Facebook</option>
-                                <option value="instagram">Instagram</option>
-                                <option value="twitter">Twitter</option>
-                                <option value="amazon">Amazon</option>
-                            </select>
-                        </div>
-                        
-                        <button class="btn-primary" id="searchNumbersBtn">
-                            <i class="fas fa-search"></i> Search Numbers
-                        </button>
-                    </div>
-                    
-                    <div class="numbers-grid" id="numbersGrid">
-                        <div class="empty-state">
-                            <i class="fas fa-search"></i>
-                            <h3>Select a service to view available numbers</h3>
-                            <p>Choose from WhatsApp, Telegram, Google, Facebook, etc.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- OTP Inbox Section -->
-        <section class="inbox-section" id="inbox">
-            <div class="container">
-                <h2 class="section-title">
-                    <i class="fas fa-inbox"></i>
-                    OTP Inbox
-                </h2>
-                
-                <div class="inbox-container">
-                    <div class="inbox-header">
-                        <div class="inbox-filter">
-                            <select id="inboxFilter" class="form-select">
-                                <option value="all">All Numbers</option>
-                            </select>
-                            <button class="btn-secondary" id="refreshInboxBtn">
-                                <i class="fas fa-sync-alt"></i> Refresh
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="messages-container" id="messagesContainer">
-                        <div class="empty-state">
-                            <i class="fas fa-envelope-open"></i>
-                            <h3>No messages yet</h3>
-                            <p>OTPs will appear here automatically when you buy a number</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Add Funds Section -->
-        <section class="funds-section" id="funds">
-            <div class="container">
-                <h2 class="section-title">
-                    <i class="fas fa-wallet"></i>
-                    Add Funds
-                </h2>
-                
-                <div class="funds-container">
-                    <div class="quick-amounts">
-                        <h4><i class="fas fa-bolt"></i> Quick Select</h4>
-                        <div class="amount-buttons">
-                            <button class="amount-btn" data-amount="100">₹100</button>
-                            <button class="amount-btn" data-amount="250">₹250</button>
-                            <button class="amount-btn" data-amount="500">₹500</button>
-                            <button class="amount-btn" data-amount="1000">₹1000</button>
-                            <button class="amount-btn" data-amount="2000">₹2000</button>
-                            <button class="amount-btn" data-amount="5000">₹5000</button>
-                        </div>
-                    </div>
-                    
-                    <div class="custom-amount">
-                        <h4><i class="fas fa-edit"></i> Custom Amount</h4>
-                        <div class="amount-input">
-                            <span class="currency">₹</span>
-                            <input type="number" id="customAmount" placeholder="Enter amount" min="10">
-                            <button class="btn-primary" id="useCustomAmountBtn">Use This Amount</button>
-                        </div>
-                    </div>
-                    
-                    <div class="selected-amount-card">
-                        <div class="amount-display">
-                            <span>Amount to Pay:</span>
-                            <span class="amount" id="selectedAmountDisplay">₹0</span>
-                        </div>
-                        <div class="transaction-info">
-                            <p><i class="fas fa-receipt"></i> Transaction ID: <code id="transactionIdDisplay">--</code></p>
-                            <p><i class="fas fa-info-circle"></i> Status: <span class="status pending" id="paymentStatusDisplay">Not selected</span></p>
-                        </div>
-                    </div>
-                    
-                    <div class="payment-methods">
-                        <h4><i class="fas fa-qrcode"></i> Pay via UPI</h4>
-                        <div class="upi-payment">
-                            <div class="qr-container">
-                                <div class="qr-code" id="qrCodeContainer">
-                                    <div class="qr-placeholder">
-                                        <i class="fas fa-qrcode"></i>
-                                        <p>Select amount to generate QR</p>
-                                    </div>
-                                </div>
-                                <div class="upi-details">
-                                    <p class="upi-id">
-                                        <i class="fas fa-id-card"></i>
-                                        UPI ID: <strong>8779738275@fam</strong>
-                                    </p>
-                                    <p class="instruction">
-                                        <i class="fas fa-info-circle"></i>
-                                        Scan QR with any UPI app
-                                    </p>
-                                    <button class="btn-secondary" id="refreshQRBtn">
-                                        <i class="fas fa-sync-alt"></i> Refresh QR
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div class="payment-steps">
-                                <h5><i class="fas fa-list-ol"></i> Payment Steps:</h5>
-                                <ol>
-                                    <li>Scan QR code with any UPI app</li>
-                                    <li>Enter exact amount: <strong id="stepAmount">₹0</strong></li>
-                                    <li>Add note: <code id="trxNote">TRX-001</code></li>
-                                    <li>Complete payment</li>
-                                    <li>Enter UTR below & submit</li>
-                                </ol>
-                                
-                                <div class="payment-form">
-                                    <div class="form-group">
-                                        <label for="utrInput">
-                                            <i class="fas fa-receipt"></i> UTR/Transaction ID
-                                        </label>
-                                        <input type="text" id="utrInput" placeholder="Enter UTR number from bank">
-                                    </div>
-                                    <button class="btn-primary btn-block" id="submitPaymentBtn">
-                                        <i class="fas fa-check-circle"></i> I've Made Payment
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Orders Section -->
-        <section class="orders-section" id="orders">
-            <div class="container">
-                <h2 class="section-title">
-                    <i class="fas fa-shopping-cart"></i>
-                    My Orders
-                </h2>
-                
-                <div class="orders-container" id="ordersContainer">
-                    <div class="empty-state">
-                        <i class="fas fa-shopping-cart"></i>
-                        <h3>No orders yet</h3>
-                        <p>Buy your first number to see orders here</p>
-                        <button class="btn-primary" id="buyFirstNumberBtn">
-                            <i class="fas fa-phone"></i> Buy Number Now
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Support Section -->
-        <section class="support-section" id="support">
-            <div class="container">
-                <h2 class="section-title">
-                    <i class="fas fa-headset"></i>
-                    Support
-                </h2>
-                
-                <div class="support-grid">
-                    <div class="support-card">
-                        <div class="support-icon">
-                            <i class="fas fa-envelope"></i>
-                        </div>
-                        <h3>Email Support</h3>
-                        <p class="support-detail">aqdaskhan03@fam</p>
-                        <button class="btn-secondary copy-btn" data-text="aqdaskhan03@fam">
-                            <i class="fas fa-copy"></i> Copy Email
-                        </button>
-                    </div>
-                    
-                    <div class="support-card">
-                        <div class="support-icon">
-                            <i class="fas fa-qrcode"></i>
-                        </div>
-                        <h3>UPI Payment</h3>
-                        <p class="support-detail">8779738275@fam</p>
-                        <button class="btn-secondary copy-btn" data-text="8779738275@fam">
-                            <i class="fas fa-copy"></i> Copy UPI
-                        </button>
-                    </div>
-                    
-                    <div class="support-card">
-                        <div class="support-icon">
-                            <i class="fas fa-question-circle"></i>
-                        </div>
-                        <h3>FAQ</h3>
-                        <p>Common questions & answers</p>
-                        <button class="btn-secondary" id="openFAQBtn">
-                            <i class="fas fa-book"></i> View FAQ
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
+        </div>
+    </section>
 
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h4><i class="fas fa-sms"></i> OTPReceiver</h4>
-                    <p>Get virtual numbers for OTP verification. Fast, reliable and secure service.</p>
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="logo">
+                        <i class="fas fa-sms"></i>
+                        <span>SMS<span class="highlight">Panel</span></span>
+                    </div>
+                    <p>Leading SMS service provider with global reach and reliable delivery.</p>
                     <div class="social-links">
-                        <a href="#" class="social-link">
-                            <i class="fab fa-whatsapp"></i>
-                        </a>
-                        <a href="#" class="social-link">
-                            <i class="fab fa-telegram"></i>
-                        </a>
-                        <a href="mailto:aqdaskhan03@fam" class="social-link">
-                            <i class="fas fa-envelope"></i>
-                        </a>
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
                     </div>
                 </div>
-                
-                <div class="footer-section">
-                    <h4>Quick Links</h4>
-                    <a href="#home">Home</a>
-                    <a href="#buy">Buy Number</a>
-                    <a href="#inbox">OTP Inbox</a>
-                    <a href="#funds">Add Funds</a>
-                    <a href="#orders">My Orders</a>
-                    <a href="#support">Support</a>
+                <div class="footer-col">
+                    <h4>Product</h4>
+                    <a href="#">SMS Marketing</a>
+                    <a href="#">OTP Service</a>
+                    <a href="#">Voice SMS</a>
+                    <a href="#">WhatsApp API</a>
                 </div>
-                
-                <div class="footer-section">
-                    <h4>Support</h4>
-                    <a href="#" id="footerFAQ">FAQ</a>
-                    <a href="mailto:aqdaskhan03@fam">Contact Us</a>
-                    <a href="#">Terms of Service</a>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <a href="#">About Us</a>
+                    <a href="#">Contact</a>
                     <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
                 </div>
-                
-                <div class="footer-section">
-                    <h4>Payment Info</h4>
-                    <p><i class="fas fa-qrcode"></i> UPI: 8779738275@fam</p>
-                    <p><i class="fas fa-envelope"></i> Email: aqdaskhan03@fam</p>
-                    <p><i class="fas fa-shield-alt"></i> 100% Secure Payments</p>
+                <div class="footer-col">
+                    <h4>Contact</h4>
+                    <p><i class="fas fa-map-marker-alt"></i> Delhi, India</p>
+                    <p><i class="fas fa-phone"></i> +91 9876543210</p>
+                    <p><i class="fas fa-envelope"></i> support@smspanel.com</p>
                 </div>
             </div>
-            
             <div class="footer-bottom">
-                <p>&copy; 2023 OTPReceiver. All rights reserved. Powered by SMSIndia.pro API</p>
-                <p>UPI ID: 8779738275@fam | Support: aqdaskhan03@fam</p>
+                <p>&copy; 2024 SMS Panel. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
-    <!-- Buy Number Modal -->
-    <div class="modal" id="buyModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-shopping-cart"></i> Buy Number</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="number-preview">
-                    <div class="number-display-large">
-                        <i class="fas fa-phone"></i>
-                        <span id="modalNumberDisplay">+91 XXXXX XXXXX</span>
-                    </div>
-                    <div class="number-details">
-                        <p><i class="fas fa-globe"></i> <strong>Country:</strong> <span id="modalCountryDisplay">India</span></p>
-                        <p><i class="fas fa-bolt"></i> <strong>Operator:</strong> <span id="modalOperatorDisplay">Airtel</span></p>
-                        <p><i class="fas fa-bullseye"></i> <strong>Service:</strong> <span id="modalServiceDisplay">WhatsApp</span></p>
-                    </div>
-                </div>
-                
-                <div class="duration-selection">
-                    <h4><i class="fas fa-clock"></i> Select Duration</h4>
-                    <div class="duration-options">
-                        <label class="duration-option">
-                            <input type="radio" name="duration" value="1" checked>
-                            <span class="duration-label">1 Hour</span>
-                            <span class="duration-price">₹<span id="price1">15</span></span>
-                        </label>
-                        <label class="duration-option">
-                            <input type="radio" name="duration" value="3">
-                            <span class="duration-label">3 Hours</span>
-                            <span class="duration-price">₹<span id="price3">40</span></span>
-                        </label>
-                        <label class="duration-option">
-                            <input type="radio" name="duration" value="24">
-                            <span class="duration-label">1 Day</span>
-                            <span class="duration-price">₹<span id="price24">80</span></span>
-                        </label>
-                    </div>
-                </div>
-                
-                <div class="price-summary">
-                    <div class="price-item">
-                        <span>Number Price:</span>
-                        <span>₹<span id="basePriceDisplay">15</span></span>
-                    </div>
-                    <div class="price-item">
-                        <span>Duration:</span>
-                        <span id="durationTextDisplay">1 Hour</span>
-                    </div>
-                    <div class="price-total">
-                        <span>Total:</span>
-                        <span class="total-amount">₹<span id="totalPriceDisplay">15</span></span>
-                    </div>
-                </div>
-                
-                <div class="modal-actions">
-                    <button class="btn-secondary close-modal">Cancel</button>
-                    <button class="btn-primary" id="confirmBuyBtn">
-                        <i class="fas fa-check"></i> Confirm Purchase - ₹<span id="finalPriceDisplay">15</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- OTP Modal -->
-    <div class="modal" id="otpModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-key"></i> OTP Received</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="otp-display-container">
-                    <div class="otp-code-large" id="modalOtpCode">123456</div>
-                    <button class="btn-copy-large" id="copyOtpBtn">
-                        <i class="far fa-copy"></i> Copy OTP
-                    </button>
-                </div>
-                
-                <div class="otp-details">
-                    <div class="detail-item">
-                        <i class="fas fa-phone"></i>
-                        <div>
-                            <span class="detail-label">Number:</span>
-                            <span class="detail-value" id="modalOtpNumber">+91 XXXXX XXXXX</span>
-                        </div>
-                    </div>
-                    <div class="detail-item">
-                        <i class="fas fa-user"></i>
-                        <div>
-                            <span class="detail-label">From:</span>
-                            <span class="detail-value" id="modalOtpSender">WhatsApp</span>
-                        </div>
-                    </div>
-                    <div class="detail-item">
-                        <i class="fas fa-clock"></i>
-                        <div>
-                            <span class="detail-label">Time:</span>
-                            <span class="detail-value" id="modalOtpTime">Just now</span>
-                        </div>
-                    </div>
-                    <div class="detail-item">
-                        <i class="fas fa-envelope"></i>
-                        <div>
-                            <span class="detail-label">Message:</span>
-                            <span class="detail-value" id="modalOtpMessage">Your OTP is 123456</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- FAQ Modal -->
-    <div class="modal" id="faqModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-question-circle"></i> Frequently Asked Questions</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="faq-list">
-                    <div class="faq-item">
-                        <h4>How does OTPReceiver work?</h4>
-                        <p>We provide virtual phone numbers that you can rent temporarily to receive OTPs and verification codes for various services like WhatsApp, Telegram, Google, etc.</p>
-                    </div>
-                    <div class="faq-item">
-                        <h4>How long do I get the number for?</h4>
-                        <p>Numbers can be rented for 1 hour, 3 hours, or 24 hours. After the duration ends, the number is automatically released.</p>
-                    </div>
-                    <div class="faq-item">
-                        <h4>How do I add funds?</h4>
-                        <p>Go to Add Funds section, select amount, scan QR code with any UPI app, make payment and enter UTR number.</p>
-                    </div>
-                    <div class="faq-item">
-                        <h4>When will my funds be added?</h4>
-                        <p>Funds are added instantly after admin approval. Usually takes 5-10 minutes during working hours.</p>
-                    </div>
-                    <div class="faq-item">
-                        <h4>Can I use the same number multiple times?</h4>
-                        <p>No, each number can only be used for one verification. After use, you need to rent a new number.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="toast"></div>
-
-    <!-- Back to Top Button -->
-    <button class="back-to-top" id="backToTop">
-        <i class="fas fa-arrow-up"></i>
-    </button>
-
-    <!-- JavaScript Files -->
-    <script src="firebase-config.js"></script>
-    <script src="script.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
